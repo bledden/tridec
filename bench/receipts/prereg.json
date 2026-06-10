@@ -1,0 +1,305 @@
+{
+  "kind": "pre-registration",
+  "version": 1,
+  "purpose": "Frozen experimental plan for the matched cross-decoder LER grid (T6), committed (git-hashed) BEFORE any grid number is observed so the grid cannot be stop-on-favorable / cherry-picked.",
+  "decoders": [
+    {
+      "name": "BPOSD-0",
+      "config": {
+        "bp_method": "minimum_sum",
+        "ms_scaling_factor": 0.625,
+        "max_iter": 30,
+        "schedule": "parallel",
+        "decoder": "BpOsdDecoder",
+        "osd_method": "osd_0",
+        "osd_order": 0
+      },
+      "tie_break": "osd0_reliability_order",
+      "availability": "available"
+    },
+    {
+      "name": "BPOSD-10",
+      "config": {
+        "bp_method": "minimum_sum",
+        "ms_scaling_factor": 0.625,
+        "max_iter": 30,
+        "schedule": "parallel",
+        "decoder": "BpOsdDecoder",
+        "osd_method": "osd_cs",
+        "osd_order": 10
+      },
+      "tie_break": "osd_cs_order10",
+      "availability": "available"
+    },
+    {
+      "name": "BPLSD",
+      "config": {
+        "bp_method": "minimum_sum",
+        "ms_scaling_factor": 0.625,
+        "max_iter": 30,
+        "schedule": "parallel",
+        "decoder": "BpLsdDecoder",
+        "lsd_method": "lsd_cs",
+        "lsd_order": 10
+      },
+      "tie_break": "lsd_cs_order10",
+      "availability": "available"
+    },
+    {
+      "name": "BP",
+      "config": {
+        "bp_method": "minimum_sum",
+        "ms_scaling_factor": 0.625,
+        "max_iter": 30,
+        "schedule": "parallel",
+        "decoder": "BpDecoder"
+      },
+      "tie_break": "min_sum_parallel_hard_decision",
+      "availability": "available"
+    },
+    {
+      "name": "Tesseract",
+      "config": {
+        "decoder": "Tesseract",
+        "det_beam": 64
+      },
+      "tie_break": "astar_beam64_lowest_cost",
+      "availability": "available"
+    },
+    {
+      "name": "RelayBP",
+      "config": {
+        "decoder": "RelayBP",
+        "relay_bp_version": "0.2.2",
+        "gamma0": 0.1,
+        "pre_iter": 80,
+        "num_sets": 60,
+        "set_max_iter": 60,
+        "gamma_dist_interval": [
+          -0.24,
+          0.66
+        ],
+        "stop_nconv": 5,
+        "stopping_criterion": "nconv"
+      },
+      "tie_break": "relay_bp_nconv_disjoint_ensemble",
+      "availability": "available"
+    },
+    {
+      "name": "SlidingWindow",
+      "config": {
+        "decoder": "SlidingWindow",
+        "qldpc_version": "0.2.9",
+        "window": 3,
+        "stride": 1,
+        "commit": 1,
+        "rounds": 6,
+        "inner": {
+          "with_BP_OSD": true,
+          "max_iter": 30,
+          "bp_method": "ms",
+          "osd_method": "osd_cs",
+          "osd_order": 10
+        }
+      },
+      "tie_break": "sliding_window_bposd_cs_commit",
+      "availability": "available"
+    }
+  ],
+  "ms_scaling_note": {
+    "ms_scaling_factor": 0.625,
+    "legacy_canon_dem_default": 1.0,
+    "note": "R6 (BINDING): the BP-OSD / BP-LSD / BP classical bar pins normalized min-sum ms_scaling_factor=0.625. This DIFFERS from the legacy default in canon_dem.decode_bposd, which sets bp_method='ms' but leaves ms_scaling_factor at ldpc's default (1.0). The grid MUST cite its classical bar as normalized min-sum ms=0.625, not the legacy ms=1.0 BP-OSD; the two are different decoders."
+  },
+  "code": {
+    "name": "BBCode",
+    "builder": "qldpc.bb_code.BBCode()",
+    "params": {
+      "n": 72,
+      "k": 12,
+      "d": 6,
+      "l": 6,
+      "m": 6
+    }
+  },
+  "p_grid": [
+    0.001,
+    0.002,
+    0.003,
+    0.005
+  ],
+  "p_reference": 0.003,
+  "bases": [
+    "X",
+    "Z"
+  ],
+  "rounds": 6,
+  "noise": "si1000",
+  "failure_target": 300,
+  "shots_per_cell": {
+    "0.001": {
+      "pilot_ler": 0.0015,
+      "pilot_shots": 2000,
+      "pilot_fails": 0,
+      "shots": 200000,
+      "source": "pilot-derived",
+      "note": "pilot saw 0/2000 failures (uninformative); LER floored to the rule-of-three 95% upper bound 3/2000=0.0015 for finite sizing \u2014 this cell may not reach the 300-failure target and instead BOUNDS the LER (see tesseract_low_p_rule)."
+    },
+    "0.002": {
+      "pilot_ler": 0.0015,
+      "pilot_shots": 2000,
+      "pilot_fails": 3,
+      "shots": 200000,
+      "source": "pilot-derived"
+    },
+    "0.003": {
+      "pilot_ler": 0.018,
+      "pilot_shots": 2000,
+      "pilot_fails": 36,
+      "shots": 16667,
+      "source": "pilot-derived"
+    },
+    "0.005": {
+      "pilot_ler": 0.092,
+      "pilot_shots": 2000,
+      "pilot_fails": 184,
+      "shots": 3261,
+      "source": "pilot-derived"
+    }
+  },
+  "shot_budget_rule": {
+    "frozen": true,
+    "stop_on_favorable": false,
+    "upsize_rule": "Upsize shots/cell at most ONCE after the pilot (e.g. if a cell's observed failure count lands outside the 200-500 band); the upsize must be DOCUMENTED with its reason and the new frozen shots/cell. No re-tuning, no per-cell adaptive growth, no stop-on-favorable.",
+    "tesseract_low_p_rule": "Tesseract (MLE anchor) at low p is expensive and the LER is tiny, so at low p Tesseract MAY be cost-probed and DOWN-SCOPED in T6 (e.g. fewer shots than the ldpc bars, or reported as an LER upper bound rather than a 300-failure point). This is a PRE-COMMITTED rule, not a post-hoc cut: any down-scope is recorded with its measured cost.",
+    "max_shots_per_cell": 5000000
+  },
+  "gap_statistic": "per_shot_ratio_bootstrap",
+  "gap_statistic_def": {
+    "definition": "Primary gap-to-MLE statistic = the per-shot PAIRED comparison of each decoder against the Tesseract MLE anchor on the SAME sampled shots (identical DEM, identical seed -> identical detectors/observables). For each shot we record (decoder_wrong, mle_wrong); the gap is the paired excess-failure rate / per-shot failure ratio of the decoder relative to Tesseract-MLE.",
+    "summary": "Summarized with BOOTSTRAP confidence intervals over the paired per-shot indicators (resampling shots), NOT an aggregate-ratio of two marginal failure counts with a single Wilson CI. The paired bootstrap respects the shot-level correlation between the decoder and the MLE anchor (both decode the same shots), which the aggregate Wilson form ignores.",
+    "aggregate_ratio_single_wilson": false,
+    "anchor": "Tesseract",
+    "computation_location": "T5 (per-shot decomposition); this prereg only freezes the definition."
+  },
+  "endpoints": {
+    "primary": "per-round logical error rate lambda = 1 - (1-LER)^(1/rounds)",
+    "secondary": [
+      "block-LER (per-shot logical failure rate)",
+      "gap-to-MLE (per-shot paired ratio vs Tesseract, bootstrap CI)"
+    ]
+  },
+  "multiplicity": {
+    "primary": "Holm-Bonferroni (FWER, alpha=0.05) on the primary endpoint",
+    "secondary": "BH-FDR (q=0.05) on the secondary endpoints",
+    "applied_across": "all (decoder, p, basis) cells",
+    "report_full_grid_including_losses": true,
+    "note": "Commit to reporting the FULL grid including losses (cells where a decoder does NOT beat / match its bar): no selective reporting."
+  },
+  "eval_compute_cap": {
+    "total_shots": 839856,
+    "distinct_from_dev": true,
+    "note": "Total pre-committed EVAL shot budget = sum over (p x basis) cells of the frozen shots/cell. This is SEPARATE from dev/iteration compute; dev shots do not draw from this cap.",
+    "per_cell_max": 5000000
+  },
+  "env": {
+    "python": "3.12.12",
+    "numpy": "2.2.6",
+    "stim": "1.15.0",
+    "ldpc": "2.4.1",
+    "tesseract_decoder": "0.1.1.dev20260526203925",
+    "relay_bp": "0.2.2",
+    "qldpc_sliding_window": {
+      "version": "0.2.9",
+      "available": true,
+      "isolation": "env-dependent: installed into an ISOLATED dir and driven from qldpc/zoo/_swd_worker.py in a SUBPROCESS whose sys.path excludes the repo (its PyPI import name 'qldpc' collides with this repo's local qldpc namespace package). Default ext dir: ~/.venvs/braket/qldpc_ext_clean (override via QLDPC_EXT_DIR)."
+    }
+  },
+  "git_head": "b891efba75cc2cbcd0dbc2992c6b89f7ac4ed016",
+  "dem_hashes": {
+    "method": {
+      "builder": "qldpc.foundation.circuits.build_memory",
+      "code": "BBCode()  # [[72,12,6]]",
+      "rounds": 6,
+      "noise": "si1000",
+      "decompose_errors": false,
+      "dem_hash": "qldpc.zoo.harness.dem_hash = sha256(str(dem.flattened()).encode())",
+      "regenerate": "for p in p_grid, basis in bases: build_memory(BBCode(), rounds=6, p=p, basis=basis, noise='si1000').detector_error_model(decompose_errors=False); then dem_hash(dem)."
+    },
+    "cells": [
+      {
+        "p": 0.001,
+        "basis": "X",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "c4ac7b144118c58bc9067f989f2303df4c5cb29e788cd05889df5256ba7c16e7"
+      },
+      {
+        "p": 0.001,
+        "basis": "Z",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "429668211e2e1b23e1674215382c151680f6042775d6565640ffe8a17d062d8e"
+      },
+      {
+        "p": 0.002,
+        "basis": "X",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "b699ab2ef93569ffe18ba18f26c4294e603f023a9cef43e6672575908911c55f"
+      },
+      {
+        "p": 0.002,
+        "basis": "Z",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "450d24861880ac7e22e2e1cd259a5f4e263cc4fa6eeabbcb9d0cc65e3b0535c3"
+      },
+      {
+        "p": 0.003,
+        "basis": "X",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "099e055aa6b22aa430d81688282fa940f9a5969f95036f7ecd1e61a76e375e2c"
+      },
+      {
+        "p": 0.003,
+        "basis": "Z",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "0545b676f384a241a81a4b6975f651cf8a8803a00e74280f12d150976f0a576f"
+      },
+      {
+        "p": 0.005,
+        "basis": "X",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "b5df170fe9e854f21ab5b8c5acc5664abe71f2d0b795f369d7a722c0518d9d70"
+      },
+      {
+        "p": 0.005,
+        "basis": "Z",
+        "rounds": 6,
+        "noise": "si1000",
+        "n_det": 252,
+        "n_obs": 12,
+        "dem_hash": "b476f1f23f666e19584a2b43d5e7ba2ede14982a72d97d45ceef428c9b5b24d5"
+      }
+    ]
+  },
+  "written_unix": 1780809344
+}

@@ -1,0 +1,3144 @@
+{
+  "kind": "matched-cross-decoder-LER-grid",
+  "anchor": "Tesseract",
+  "gap_statistic": "per_shot_ratio_bootstrap",
+  "failure_target": 300,
+  "seed": 0,
+  "n_boot": 10000,
+  "p_grid": [
+    0.001,
+    0.002,
+    0.003,
+    0.005
+  ],
+  "bases": [
+    "X",
+    "Z"
+  ],
+  "rounds": 6,
+  "noise": "si1000",
+  "shots_override": null,
+  "dry_scale": null,
+  "include_external": true,
+  "include_sliding_window": true,
+  "prereg_git_head": "b891efba75cc2cbcd0dbc2992c6b89f7ac4ed016",
+  "grid_git_head": "017f51fcd823c2e220948b5415bc8288709512dd",
+  "env": {
+    "python": "3.12.12",
+    "numpy": "2.2.6",
+    "stim": "1.15.0",
+    "ldpc": "2.4.1",
+    "tesseract_decoder": "0.1.1.dev20260526203925",
+    "relay_bp": "0.2.2"
+  },
+  "sliding_window": {
+    "requested": true,
+    "available": true,
+    "probe_shots": 400,
+    "time_cap_s": 1200.0,
+    "floor_shots": 1000,
+    "startup_s": 1.0,
+    "down_scope_rule": "Sliding-window runs at the FULL prereg shots/cell, like every other decoder. To measure realistic cost, cost-probe the streaming decoder on 400 shots on the first cell and fit the affine model total = startup(~1s) + per_shot * n, so the projection uses the AMORTIZED marginal per-shot rate (NOT the startup-dominated per-probe-shot number). The time cap (1200s/cell) is a generous backstop that is NOT expected to fire at the amortized rate. If a cell's projected wall-time ever exceeds the cap, that cell's sliding-window is down-scoped to the failure-target shot count for its p (enough shots for ~300 failures at the pilot LER, floored to 1000), recorded as sliding_window_shots + a note. No other decoder is ever down-scoped.",
+    "probe": [
+      0.0009950960425021548,
+      400,
+      1.398038417000862
+    ],
+    "sec_per_shot": 0.0009950960425021548
+  },
+  "cells": [
+    {
+      "p": 0.001,
+      "basis": "X",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 200000,
+      "seed": 0,
+      "dem_hash": "c4ac7b144118c58bc9067f989f2303df4c5cb29e788cd05889df5256ba7c16e7",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 98,
+          "ler": 0.00049,
+          "ler_ci": [
+            0.0004021306666819885,
+            0.0005970581408993953
+          ],
+          "lambda_per_round": 8.168334527236532e-05,
+          "decode_s": 18.84717400000045,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1136363636363635,
+            "lo": 0.9423076923076924,
+            "hi": 1.3214285714285714
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 93,
+          "ler": 0.000465,
+          "ler_ci": [
+            0.00037962406177059445,
+            0.0005695657061923424
+          ],
+          "lambda_per_round": 7.751501989339271e-05,
+          "decode_s": 27.657203708000452,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0568181818181819,
+            "lo": 0.9009009009009008,
+            "hi": 1.2461538461538462
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 91,
+          "ler": 0.000455,
+          "ler_ci": [
+            0.0003706399742433822,
+            0.000558550177872176
+          ],
+          "lambda_per_round": 7.584771406821122e-05,
+          "decode_s": 19.68447258299966,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.034090909090909,
+            "lo": 0.872093023255814,
+            "hi": 1.2272727272727273
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1239,
+          "ler": 0.006195,
+          "ler_ci": [
+            0.005860473072476934,
+            0.0065484965760340555
+          ],
+          "lambda_per_round": 0.0010351752748897214,
+          "decode_s": 18.717201375000514,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 14.079545454545453,
+            "lo": 11.660377358490566,
+            "hi": 17.55072463768116
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 88,
+          "ler": 0.00044,
+          "ler_ci": [
+            0.0003571848123800023,
+            0.0005420059159644877
+          ],
+          "lambda_per_round": 7.33467813939237e-05,
+          "decode_s": 66.42871770800048,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 101,
+          "ler": 0.000505,
+          "ler_ci": [
+            0.0004156648363161287,
+            0.0006135233950363234
+          ],
+          "lambda_per_round": 8.418438220358926e-05,
+          "decode_s": 58.622567583999626,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1477272727272727,
+            "lo": 0.9746835443037974,
+            "hi": 1.3559322033898304
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 90,
+          "ler": 0.00045,
+          "ler_ci": [
+            0.0003661520784015304,
+            0.0005530382657903383
+          ],
+          "lambda_per_round": 7.501406636845065e-05,
+          "decode_s": 54.382288667000466,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0227272727272727,
+            "lo": 0.8426966292134832,
+            "hi": 1.2465753424657535
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 200000,
+        "both_correct": 199881,
+        "both_wrong": 62,
+        "only_a_right": 26,
+        "only_b_right": 31,
+        "p_tesseract_succeeds_given_bposd_fails": 0.3333333333333333,
+        "oracle_ler_bound": 0.00031
+      }
+    },
+    {
+      "p": 0.001,
+      "basis": "Z",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 200000,
+      "seed": 0,
+      "dem_hash": "429668211e2e1b23e1674215382c151680f6042775d6565640ffe8a17d062d8e",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 90,
+          "ler": 0.00045,
+          "ler_ci": [
+            0.0003661520784015304,
+            0.0005530382657903383
+          ],
+          "lambda_per_round": 7.501406636845065e-05,
+          "decode_s": 19.09588799999983,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 0.9890109890109889,
+            "lo": 0.8229166666666666,
+            "hi": 1.1904761904761905
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 95,
+          "ler": 0.000475,
+          "ler_ci": [
+            0.0003886189181681738,
+            0.0005805704656421419
+          ],
+          "lambda_per_round": 7.918233961912158e-05,
+          "decode_s": 27.427578417000404,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.043956043956044,
+            "lo": 0.8918918918918919,
+            "hi": 1.2291666666666667
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 88,
+          "ler": 0.00044,
+          "ler_ci": [
+            0.0003571848123800023,
+            0.0005420059159644877
+          ],
+          "lambda_per_round": 7.33467813939237e-05,
+          "decode_s": 19.555765125000107,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 0.967032967032967,
+            "lo": 0.8041237113402061,
+            "hi": 1.164179104477612
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1268,
+          "ler": 0.00634,
+          "ler_ci": [
+            0.006001496080049102,
+            0.006697467998248881
+          ],
+          "lambda_per_round": 0.0010594688915568362,
+          "decode_s": 18.701910666999538,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 13.934065934065934,
+            "lo": 11.57943925233645,
+            "hi": 17.34722222222222
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 91,
+          "ler": 0.000455,
+          "ler_ci": [
+            0.0003706399742433822,
+            0.000558550177872176
+          ],
+          "lambda_per_round": 7.584771406821122e-05,
+          "decode_s": 66.49632958300026,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 90,
+          "ler": 0.00045,
+          "ler_ci": [
+            0.0003661520784015304,
+            0.0005530382657903383
+          ],
+          "lambda_per_round": 7.501406636845065e-05,
+          "decode_s": 58.51263795900013,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 0.9890109890109889,
+            "lo": 0.8383838383838383,
+            "hi": 1.1724137931034484
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 94,
+          "ler": 0.00047,
+          "ler_ci": [
+            0.00038412016519939936,
+            0.0005750694106872268
+          ],
+          "lambda_per_round": 7.834867801859158e-05,
+          "decode_s": 53.452649166998526,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0329670329670328,
+            "lo": 0.8543689320388349,
+            "hi": 1.2567567567567568
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 200000,
+        "both_correct": 199879,
+        "both_wrong": 65,
+        "only_a_right": 26,
+        "only_b_right": 30,
+        "p_tesseract_succeeds_given_bposd_fails": 0.3157894736842105,
+        "oracle_ler_bound": 0.000325
+      }
+    },
+    {
+      "p": 0.002,
+      "basis": "X",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 200000,
+      "seed": 0,
+      "dem_hash": "b699ab2ef93569ffe18ba18f26c4294e603f023a9cef43e6672575908911c55f",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 906,
+          "ler": 0.00453,
+          "ler_ci": [
+            0.004245056314569969,
+            0.004833977295352451
+          ],
+          "lambda_per_round": 0.0007564290202508595,
+          "decode_s": 27.55035674999999,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.099514563106796,
+            "lo": 1.041766109785203,
+            "hi": 1.15980024968789
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 843,
+          "ler": 0.004215,
+          "ler_ci": [
+            0.0039404285002708995,
+            0.004508617210459087
+          ],
+          "lambda_per_round": 0.0007037369531186499,
+          "decode_s": 63.682468749999316,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0230582524271843,
+            "lo": 0.9750889679715302,
+            "hi": 1.0741656365883807
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 880,
+          "ler": 0.0044,
+          "ler_ci": [
+            0.004119291229507493,
+            0.004699747374399003
+          ],
+          "lambda_per_round": 0.000734681404144566,
+          "decode_s": 28.126515041998573,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0679611650485437,
+            "lo": 1.012987012987013,
+            "hi": 1.1261378413524057
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 5523,
+          "ler": 0.027615,
+          "ler_ci": [
+            0.026905843945320397,
+            0.028342302848275987
+          ],
+          "lambda_per_round": 0.004656369077740252,
+          "decode_s": 26.23893208300069,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 6.70266990291262,
+            "lo": 6.293440736478711,
+            "hi": 7.155878467635403
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 824,
+          "ler": 0.00412,
+          "ler_ci": [
+            0.00384863302573791,
+            0.00441041633444198
+          ],
+          "lambda_per_round": 0.0006878484210337543,
+          "decode_s": 157.82544920799955,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 859,
+          "ler": 0.004295,
+          "ler_ci": [
+            0.004017758163411269,
+            0.00459128447409775
+          ],
+          "lambda_per_round": 0.0007171177493823233,
+          "decode_s": 87.50100408400067,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0424757281553398,
+            "lo": 0.9892729439809297,
+            "hi": 1.0983606557377048
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 886,
+          "ler": 0.00443,
+          "ler_ci": [
+            0.004148308382680593,
+            0.0047307290687680385
+          ],
+          "lambda_per_round": 0.0007396998747394301,
+          "decode_s": 105.51201349999974,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0752427184466018,
+            "lo": 1.0188679245283019,
+            "hi": 1.1345911949685534
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 200000,
+        "both_correct": 198952,
+        "both_wrong": 619,
+        "only_a_right": 205,
+        "only_b_right": 224,
+        "p_tesseract_succeeds_given_bposd_fails": 0.265717674970344,
+        "oracle_ler_bound": 0.003095
+      }
+    },
+    {
+      "p": 0.002,
+      "basis": "Z",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 200000,
+      "seed": 0,
+      "dem_hash": "450d24861880ac7e22e2e1cd259a5f4e263cc4fa6eeabbcb9d0cc65e3b0535c3",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 898,
+          "ler": 0.00449,
+          "ler_ci": [
+            0.004206352739262513,
+            0.0047926824072703905
+          ],
+          "lambda_per_round": 0.0007497371940009545,
+          "decode_s": 27.15251041599913,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.095121951219512,
+            "lo": 1.0378048780487805,
+            "hi": 1.15625
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 847,
+          "ler": 0.004235,
+          "ler_ci": [
+            0.003959758530708023,
+            0.004529286411716722
+          ],
+          "lambda_per_round": 0.0007070820681982504,
+          "decode_s": 62.50426250000055,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0329268292682927,
+            "lo": 0.9844497607655502,
+            "hi": 1.0842105263157895
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 874,
+          "ler": 0.00437,
+          "ler_ci": [
+            0.004090277471881786,
+            0.004668762284482573
+          ],
+          "lambda_per_round": 0.000729663059564345,
+          "decode_s": 27.938636582999607,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0658536585365852,
+            "lo": 1.010600706713781,
+            "hi": 1.125
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 5545,
+          "ler": 0.027725,
+          "ler_ci": [
+            0.02701445373170163,
+            0.028453688836215917
+          ],
+          "lambda_per_round": 0.00467513615738846,
+          "decode_s": 26.083928292000564,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 6.762195121951219,
+            "lo": 6.3466362599771955,
+            "hi": 7.23341836734694
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 820,
+          "ler": 0.0041,
+          "ler_ci": [
+            0.0038293124058632875,
+            0.004389737722621844
+          ],
+          "lambda_per_round": 0.0006845036278536609,
+          "decode_s": 155.8289966249995,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 872,
+          "ler": 0.00436,
+          "ler_ci": [
+            0.004080606979909232,
+            0.004658433160607748
+          ],
+          "lambda_per_round": 0.0007279903060397608,
+          "decode_s": 88.28913904100045,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0634146341463415,
+            "lo": 1.00734394124847,
+            "hi": 1.123134328358209
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 888,
+          "ler": 0.00444,
+          "ler_ci": [
+            0.004157981515702154,
+            0.004741055551593857
+          ],
+          "lambda_per_round": 0.0007413727262755021,
+          "decode_s": 105.60117554200042,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0829268292682928,
+            "lo": 1.0226130653266332,
+            "hi": 1.1460122699386504
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 200000,
+        "both_correct": 198948,
+        "both_wrong": 615,
+        "only_a_right": 205,
+        "only_b_right": 232,
+        "p_tesseract_succeeds_given_bposd_fails": 0.27390791027154665,
+        "oracle_ler_bound": 0.003075
+      }
+    },
+    {
+      "p": 0.003,
+      "basis": "X",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 16667,
+      "seed": 0,
+      "dem_hash": "099e055aa6b22aa430d81688282fa940f9a5969f95036f7ecd1e61a76e375e2c",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 294,
+          "ler": 0.01763964720705586,
+          "ler_ci": [
+            0.015749426305091147,
+            0.019752176685366156
+          ],
+          "lambda_per_round": 0.002961785218228208,
+          "decode_s": 3.5185590000000957,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1307692307692307,
+            "lo": 1.032142857142857,
+            "hi": 1.2393822393822393
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 275,
+          "ler": 0.016499670006599867,
+          "ler_ci": [
+            0.014674121593020896,
+            0.018548052385286232
+          ],
+          "lambda_per_round": 0.0027690433779214985,
+          "decode_s": 11.986706458001208,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0576923076923077,
+            "lo": 0.9812734082397006,
+            "hi": 1.1422764227642275
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 286,
+          "ler": 0.017159656806863863,
+          "ler_ci": [
+            0.015296391840243992,
+            0.01924545156615008
+          ],
+          "lambda_per_round": 0.002880608053290379,
+          "decode_s": 3.7703385410004557,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1,
+            "lo": 1.0039525691699605,
+            "hi": 1.203252032520325
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1384,
+          "ler": 0.08303833923321534,
+          "ler_ci": [
+            0.07894449623146937,
+            0.08732435008760307
+          ],
+          "lambda_per_round": 0.01434439413146027,
+          "decode_s": 3.225516582999262,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 5.323076923076923,
+            "lo": 4.776666666666667,
+            "hi": 5.991228070175439
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 260,
+          "ler": 0.015599688006239875,
+          "ler_ci": [
+            0.013826863388745659,
+            0.01759576136944291
+          ],
+          "lambda_per_round": 0.002617010230448469,
+          "decode_s": 42.00138487500044,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 273,
+          "ler": 0.01637967240655187,
+          "ler_ci": [
+            0.0145610656819344,
+            0.018421168400356923
+          ],
+          "lambda_per_round": 0.002748765594788205,
+          "decode_s": 10.693577584001105,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.05,
+            "lo": 0.96309963099631,
+            "hi": 1.1456692913385829
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 311,
+          "ler": 0.01865962680746385,
+          "ler_ci": [
+            0.016713373010139268,
+            0.0208277190964524
+          ],
+          "lambda_per_round": 0.0031343965001415786,
+          "decode_s": 16.128300708000097,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1961538461538461,
+            "lo": 1.092783505154639,
+            "hi": 1.3114035087719298
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 16667,
+        "both_correct": 16347,
+        "both_wrong": 215,
+        "only_a_right": 45,
+        "only_b_right": 60,
+        "p_tesseract_succeeds_given_bposd_fails": 0.21818181818181817,
+        "oracle_ler_bound": 0.012899742005159897
+      }
+    },
+    {
+      "p": 0.003,
+      "basis": "Z",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 16667,
+      "seed": 0,
+      "dem_hash": "0545b676f384a241a81a4b6975f651cf8a8803a00e74280f12d150976f0a576f",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 311,
+          "ler": 0.01865962680746385,
+          "ler_ci": [
+            0.016713373010139268,
+            0.0208277190964524
+          ],
+          "lambda_per_round": 0.0031343965001415786,
+          "decode_s": 3.4833642079993297,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.098939929328622,
+            "lo": 1.0036764705882353,
+            "hi": 1.19921875
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 293,
+          "ler": 0.01757964840703186,
+          "ler_ci": [
+            0.015692775818893657,
+            0.019688857223555744
+          ],
+          "lambda_per_round": 0.0029516362652497463,
+          "decode_s": 11.79225979200055,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0353356890459364,
+            "lo": 0.9573770491803277,
+            "hi": 1.1178571428571427
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 298,
+          "ler": 0.01787964240715186,
+          "ler_ci": [
+            0.015976087555287906,
+            0.020005395227201014
+          ],
+          "lambda_per_round": 0.0030023861963446308,
+          "decode_s": 3.7098387500009267,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0530035335689047,
+            "lo": 0.9625850340136054,
+            "hi": 1.1483870967741936
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1346,
+          "ler": 0.08075838483230335,
+          "ler_ci": [
+            0.07671781429903053,
+            0.08499217399574158
+          ],
+          "lambda_per_round": 0.013936357225151741,
+          "decode_s": 3.1870335419989715,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 4.756183745583039,
+            "lo": 4.277602523659306,
+            "hi": 5.313207547169811
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 283,
+          "ler": 0.016979660406791865,
+          "ler_ci": [
+            0.015126605464108381,
+            0.019055328098261978
+          ],
+          "lambda_per_round": 0.0028501751336774683,
+          "decode_s": 37.13834725000015,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 284,
+          "ler": 0.017039659206815865,
+          "ler_ci": [
+            0.015183194662806246,
+            0.019118708847572025
+          ],
+          "lambda_per_round": 0.002860318924211458,
+          "decode_s": 10.673935417000393,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0035335689045937,
+            "lo": 0.9204152249134949,
+            "hi": 1.089928057553957
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 311,
+          "ler": 0.01865962680746385,
+          "ler_ci": [
+            0.016713373010139268,
+            0.0208277190964524
+          ],
+          "lambda_per_round": 0.0031343965001415786,
+          "decode_s": 15.772384500000044,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.098939929328622,
+            "lo": 1.0068027210884354,
+            "hi": 1.2
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 16667,
+        "both_correct": 16312,
+        "both_wrong": 221,
+        "only_a_right": 62,
+        "only_b_right": 72,
+        "p_tesseract_succeeds_given_bposd_fails": 0.24573378839590443,
+        "oracle_ler_bound": 0.013259734805303893
+      }
+    },
+    {
+      "p": 0.005,
+      "basis": "X",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 3261,
+      "seed": 0,
+      "dem_hash": "b5df170fe9e854f21ab5b8c5acc5664abe71f2d0b795f369d7a722c0518d9d70",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 361,
+          "ler": 0.11070223857712358,
+          "ler_ci": [
+            0.10038772698598332,
+            0.12193289034503818
+          ],
+          "lambda_per_round": 0.019363923262537663,
+          "decode_s": 1.4844693329996517,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.2448275862068965,
+            "lo": 1.1508196721311477,
+            "hi": 1.3513513513513515
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 301,
+          "ler": 0.09230297454768475,
+          "ler_ci": [
+            0.08284216225893413,
+            0.10272322627323845
+          ],
+          "lambda_per_round": 0.016011207186451326,
+          "decode_s": 7.462486958998852,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0379310344827586,
+            "lo": 0.9706959706959708,
+            "hi": 1.110344827586207
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 339,
+          "ler": 0.10395584176632934,
+          "ler_ci": [
+            0.09394226741944918,
+            0.11490143268532771
+          ],
+          "lambda_per_round": 0.018127939671282234,
+          "decode_s": 1.9269655830012198,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1689655172413793,
+            "lo": 1.082236842105263,
+            "hi": 1.2673992673992676
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1047,
+          "ler": 0.32106715731370744,
+          "ler_ci": [
+            0.3052609686879906,
+            0.33729443124320363
+          ],
+          "lambda_per_round": 0.06250030245234339,
+          "decode_s": 1.2437657919999765,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 3.6103448275862067,
+            "lo": 3.2756410256410255,
+            "hi": 4.00796812749004
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 290,
+          "ler": 0.08892977614228764,
+          "ler_ci": [
+            0.07963756437120335,
+            0.09918936554784692
+          ],
+          "lambda_per_round": 0.015402696221418655,
+          "decode_s": 183.3452502500004,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 319,
+          "ler": 0.0978227537565164,
+          "ler_ci": [
+            0.08809460461873352,
+            0.10849735255309374
+          ],
+          "lambda_per_round": 0.01701102946322397,
+          "decode_s": 4.76252333299999,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.0999999999999999,
+            "lo": 1.020066889632107,
+            "hi": 1.1879699248120301
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 337,
+          "ler": 0.10334253296534805,
+          "ler_ci": [
+            0.09335697757133246,
+            0.11426154824014947
+          ],
+          "lambda_per_round": 0.018015962469072777,
+          "decode_s": 5.965551957999196,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1620689655172414,
+            "lo": 1.0774193548387097,
+            "hi": 1.2591240875912408
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 3261,
+        "both_correct": 2915,
+        "both_wrong": 245,
+        "only_a_right": 45,
+        "only_b_right": 56,
+        "p_tesseract_succeeds_given_bposd_fails": 0.18604651162790697,
+        "oracle_ler_bound": 0.07513032812020852
+      }
+    },
+    {
+      "p": 0.005,
+      "basis": "Z",
+      "rounds": 6,
+      "noise": "si1000",
+      "shots": 3261,
+      "seed": 0,
+      "dem_hash": "b476f1f23f666e19584a2b43d5e7ba2ede14982a72d97d45ceef428c9b5b24d5",
+      "g1_match": true,
+      "n_det": 252,
+      "n_obs": 12,
+      "failure_target": 300,
+      "ler_is_bound": false,
+      "decoders": [
+        {
+          "name": "BPOSD-0",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_0",
+            "osd_order": 0
+          },
+          "tie_break": "osd0_reliability_order",
+          "fails": 357,
+          "ler": 0.10947562097516099,
+          "ler_ci": [
+            0.09921485842689728,
+            0.12065541031753428
+          ],
+          "lambda_per_round": 0.019138619132107015,
+          "decode_s": 1.4851323330003652,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.19,
+            "lo": 1.1059190031152648,
+            "hi": 1.2838283828382837
+          }
+        },
+        {
+          "name": "BPOSD-10",
+          "config": {
+            "decoder": "BpOsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "osd_method": "osd_cs",
+            "osd_order": 10
+          },
+          "tie_break": "osd_cs_order10",
+          "fails": 315,
+          "ler": 0.09659613615455381,
+          "ler_ci": [
+            0.086926510491583,
+            0.10721509809365433
+          ],
+          "lambda_per_round": 0.01678840708352214,
+          "decode_s": 7.378653375000795,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.05,
+            "lo": 0.986159169550173,
+            "hi": 1.1186440677966103
+          }
+        },
+        {
+          "name": "BPLSD",
+          "config": {
+            "decoder": "BpLsdDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel",
+            "lsd_method": "lsd_cs",
+            "lsd_order": 10
+          },
+          "tie_break": "lsd_cs_order10",
+          "fails": 350,
+          "ler": 0.10732904017172647,
+          "ler_ci": [
+            0.09716335820597119,
+            0.11841880051192803
+          ],
+          "lambda_per_round": 0.018744958444029236,
+          "decode_s": 1.8636580419988604,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.1666666666666667,
+            "lo": 1.086261980830671,
+            "hi": 1.2559726962457338
+          }
+        },
+        {
+          "name": "BP",
+          "config": {
+            "decoder": "BpDecoder",
+            "bp_method": "minimum_sum",
+            "ms_scaling_factor": 0.625,
+            "max_iter": 30,
+            "schedule": "parallel"
+          },
+          "tie_break": "min_sum_parallel_hard_decision",
+          "fails": 1055,
+          "ler": 0.32352039251763265,
+          "ler_ci": [
+            0.3076793597154222,
+            0.3397767373889519
+          ],
+          "lambda_per_round": 0.06306574315954616,
+          "decode_s": 1.2174470410009235,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 3.516666666666667,
+            "lo": 3.203592814371258,
+            "hi": 3.9080882352941178
+          }
+        },
+        {
+          "name": "Tesseract",
+          "config": {
+            "decoder": "Tesseract",
+            "det_beam": 64
+          },
+          "tie_break": "astar_beam64_lowest_cost",
+          "fails": 300,
+          "ler": 0.09199632014719411,
+          "ler_ci": [
+            0.08255066666788118,
+            0.10240213471764392
+          ],
+          "lambda_per_round": 0.015955810209566823,
+          "decode_s": 183.7439046669988,
+          "is_anchor": true,
+          "gap_to_mle": {
+            "ratio": 1.0,
+            "lo": 1.0,
+            "hi": 1.0
+          }
+        },
+        {
+          "name": "RelayBP",
+          "config": {
+            "decoder": "RelayBP",
+            "relay_bp_version": "0.2.2",
+            "gamma0": 0.1,
+            "pre_iter": 80,
+            "num_sets": 60,
+            "set_max_iter": 60,
+            "gamma_dist_interval": [
+              -0.24,
+              0.66
+            ],
+            "stop_nconv": 5,
+            "stopping_criterion": "nconv"
+          },
+          "tie_break": "relay_bp_nconv_disjoint_ensemble",
+          "fails": 321,
+          "ler": 0.0984360625574977,
+          "ler_ci": [
+            0.0886788359395501,
+            0.10913829552557214
+          ],
+          "lambda_per_round": 0.01712243525541135,
+          "decode_s": 5.030531584001437,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.07,
+            "lo": 0.9969230769230769,
+            "hi": 1.1490066225165563
+          }
+        },
+        {
+          "name": "SlidingWindow",
+          "config": {
+            "decoder": "SlidingWindow",
+            "qldpc_version": "0.2.9",
+            "window": 3,
+            "stride": 1,
+            "commit": 1,
+            "rounds": 6,
+            "inner": {
+              "with_BP_OSD": true,
+              "max_iter": 30,
+              "bp_method": "ms",
+              "osd_method": "osd_cs",
+              "osd_order": 10
+            }
+          },
+          "tie_break": "sliding_window_bposd_cs_commit",
+          "fails": 360,
+          "ler": 0.11039558417663294,
+          "ler_ci": [
+            0.10009447060021906,
+            0.12161355958415497
+          ],
+          "lambda_per_round": 0.019307572963087494,
+          "decode_s": 5.86469012499947,
+          "is_anchor": false,
+          "gap_to_mle": {
+            "ratio": 1.2,
+            "lo": 1.1134020618556701,
+            "hi": 1.296028880866426
+          }
+        }
+      ],
+      "gate_a": {
+        "n": 3261,
+        "both_correct": 2905,
+        "both_wrong": 259,
+        "only_a_right": 41,
+        "only_b_right": 56,
+        "p_tesseract_succeeds_given_bposd_fails": 0.17777777777777778,
+        "oracle_ler_bound": 0.07942348972707758
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 98,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.4633107725964627
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 93,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.7100930025895833
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 91,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.8225388802291662
+    },
+    {
+      "decoder": "BP",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 1239,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 101,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.3442330887906071
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.001,
+      "basis": "X",
+      "fails_a": 90,
+      "n_a": 200000,
+      "fails_b": 88,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.8808121872397738
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 90,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.940734886708124
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 95,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.7692451279943024
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 88,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.8225388802291662
+    },
+    {
+      "decoder": "BP",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 1268,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 90,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.940734886708124
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.001,
+      "basis": "Z",
+      "fails_a": 94,
+      "n_a": 200000,
+      "fails_b": 91,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.8253919013663238
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 906,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.048183094354508293
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 843,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.6409798479343582
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 880,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.17398716850903373
+    },
+    {
+      "decoder": "BP",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 5523,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 859,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.3925779084945036
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.002,
+      "basis": "X",
+      "fails_a": 886,
+      "n_a": 200000,
+      "fails_b": 824,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.1329595927851508
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 898,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.05930900601933975
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 847,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.5075365451633393
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 874,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.18857821359834603
+    },
+    {
+      "decoder": "BP",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 5545,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 872,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.20521054734001964
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.002,
+      "basis": "Z",
+      "fails_a": 888,
+      "n_a": 200000,
+      "fails_b": 820,
+      "n_b": 200000,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.0991682277806194
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 294,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.14520554992434276
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 275,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.5132572866797376
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 286,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.2618949304912479
+    },
+    {
+      "decoder": "BP",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 1384,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 273,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.5702732888656998
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.003,
+      "basis": "X",
+      "fails_a": 311,
+      "n_a": 16667,
+      "fails_b": 260,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.0313342747185148
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 311,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.2463629083092298
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 293,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.6742561343204723
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 298,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.5301349145679914
+    },
+    {
+      "decoder": "BP",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 1346,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 284,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.966213433861649
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.003,
+      "basis": "Z",
+      "fails_a": 311,
+      "n_a": 16667,
+      "fails_b": 283,
+      "n_b": 16667,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.2463629083092298
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 361,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": true,
+      "pvalue": 0.0033577583702981695
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 301,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.6351518390703632
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 339,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.039841946782806614
+    },
+    {
+      "decoder": "BP",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 1047,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 319,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.21713869155088683
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.005,
+      "basis": "X",
+      "fails_a": 337,
+      "n_a": 3261,
+      "fails_b": 290,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.04834793304182328
+    },
+    {
+      "decoder": "BPOSD-0",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 357,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.0190255054693933
+    },
+    {
+      "decoder": "BPOSD-10",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 315,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.5250593774271841
+    },
+    {
+      "decoder": "BPLSD",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 350,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.038747509583090034
+    },
+    {
+      "decoder": "BP",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 1055,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": true,
+      "bh_sig": true,
+      "pvalue": 0.0
+    },
+    {
+      "decoder": "RelayBP",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 321,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.3756534062450634
+    },
+    {
+      "decoder": "SlidingWindow",
+      "p": 0.005,
+      "basis": "Z",
+      "fails_a": 360,
+      "n_a": 3261,
+      "fails_b": 300,
+      "n_b": 3261,
+      "holm_sig": false,
+      "bh_sig": false,
+      "pvalue": 0.013760050959198411
+    }
+  ],
+  "frontier": {
+    "BPOSD-0": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.00049,
+          "lambda_per_round": 8.168334527236532e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.00045,
+          "lambda_per_round": 7.501406636845065e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.00453,
+          "lambda_per_round": 0.0007564290202508595,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.00449,
+          "lambda_per_round": 0.0007497371940009545,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.01763964720705586,
+          "lambda_per_round": 0.002961785218228208,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.01865962680746385,
+          "lambda_per_round": 0.0031343965001415786,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.11070223857712358,
+          "lambda_per_round": 0.019363923262537663,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.10947562097516099,
+          "lambda_per_round": 0.019138619132107015,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 1.1136363636363635,
+          "lo": 0.9423076923076924,
+          "hi": 1.3214285714285714
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 0.9890109890109889,
+          "lo": 0.8229166666666666,
+          "hi": 1.1904761904761905
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 1.099514563106796,
+          "lo": 1.041766109785203,
+          "hi": 1.15980024968789
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 1.095121951219512,
+          "lo": 1.0378048780487805,
+          "hi": 1.15625
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 1.1307692307692307,
+          "lo": 1.032142857142857,
+          "hi": 1.2393822393822393
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 1.098939929328622,
+          "lo": 1.0036764705882353,
+          "hi": 1.19921875
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 1.2448275862068965,
+          "lo": 1.1508196721311477,
+          "hi": 1.3513513513513515
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 1.19,
+          "lo": 1.1059190031152648,
+          "hi": 1.2838283828382837
+        }
+      ]
+    },
+    "BPOSD-10": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.000465,
+          "lambda_per_round": 7.751501989339271e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.000475,
+          "lambda_per_round": 7.918233961912158e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.004215,
+          "lambda_per_round": 0.0007037369531186499,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.004235,
+          "lambda_per_round": 0.0007070820681982504,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.016499670006599867,
+          "lambda_per_round": 0.0027690433779214985,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.01757964840703186,
+          "lambda_per_round": 0.0029516362652497463,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.09230297454768475,
+          "lambda_per_round": 0.016011207186451326,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.09659613615455381,
+          "lambda_per_round": 0.01678840708352214,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 1.0568181818181819,
+          "lo": 0.9009009009009008,
+          "hi": 1.2461538461538462
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 1.043956043956044,
+          "lo": 0.8918918918918919,
+          "hi": 1.2291666666666667
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 1.0230582524271843,
+          "lo": 0.9750889679715302,
+          "hi": 1.0741656365883807
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 1.0329268292682927,
+          "lo": 0.9844497607655502,
+          "hi": 1.0842105263157895
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 1.0576923076923077,
+          "lo": 0.9812734082397006,
+          "hi": 1.1422764227642275
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 1.0353356890459364,
+          "lo": 0.9573770491803277,
+          "hi": 1.1178571428571427
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 1.0379310344827586,
+          "lo": 0.9706959706959708,
+          "hi": 1.110344827586207
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 1.05,
+          "lo": 0.986159169550173,
+          "hi": 1.1186440677966103
+        }
+      ]
+    },
+    "BPLSD": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.000455,
+          "lambda_per_round": 7.584771406821122e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.00044,
+          "lambda_per_round": 7.33467813939237e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.0044,
+          "lambda_per_round": 0.000734681404144566,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.00437,
+          "lambda_per_round": 0.000729663059564345,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.017159656806863863,
+          "lambda_per_round": 0.002880608053290379,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.01787964240715186,
+          "lambda_per_round": 0.0030023861963446308,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.10395584176632934,
+          "lambda_per_round": 0.018127939671282234,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.10732904017172647,
+          "lambda_per_round": 0.018744958444029236,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 1.034090909090909,
+          "lo": 0.872093023255814,
+          "hi": 1.2272727272727273
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 0.967032967032967,
+          "lo": 0.8041237113402061,
+          "hi": 1.164179104477612
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 1.0679611650485437,
+          "lo": 1.012987012987013,
+          "hi": 1.1261378413524057
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 1.0658536585365852,
+          "lo": 1.010600706713781,
+          "hi": 1.125
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 1.1,
+          "lo": 1.0039525691699605,
+          "hi": 1.203252032520325
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 1.0530035335689047,
+          "lo": 0.9625850340136054,
+          "hi": 1.1483870967741936
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 1.1689655172413793,
+          "lo": 1.082236842105263,
+          "hi": 1.2673992673992676
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 1.1666666666666667,
+          "lo": 1.086261980830671,
+          "hi": 1.2559726962457338
+        }
+      ]
+    },
+    "BP": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.006195,
+          "lambda_per_round": 0.0010351752748897214,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.00634,
+          "lambda_per_round": 0.0010594688915568362,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.027615,
+          "lambda_per_round": 0.004656369077740252,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.027725,
+          "lambda_per_round": 0.00467513615738846,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.08303833923321534,
+          "lambda_per_round": 0.01434439413146027,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.08075838483230335,
+          "lambda_per_round": 0.013936357225151741,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.32106715731370744,
+          "lambda_per_round": 0.06250030245234339,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.32352039251763265,
+          "lambda_per_round": 0.06306574315954616,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 14.079545454545453,
+          "lo": 11.660377358490566,
+          "hi": 17.55072463768116
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 13.934065934065934,
+          "lo": 11.57943925233645,
+          "hi": 17.34722222222222
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 6.70266990291262,
+          "lo": 6.293440736478711,
+          "hi": 7.155878467635403
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 6.762195121951219,
+          "lo": 6.3466362599771955,
+          "hi": 7.23341836734694
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 5.323076923076923,
+          "lo": 4.776666666666667,
+          "hi": 5.991228070175439
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 4.756183745583039,
+          "lo": 4.277602523659306,
+          "hi": 5.313207547169811
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 3.6103448275862067,
+          "lo": 3.2756410256410255,
+          "hi": 4.00796812749004
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 3.516666666666667,
+          "lo": 3.203592814371258,
+          "hi": 3.9080882352941178
+        }
+      ]
+    },
+    "Tesseract": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.00044,
+          "lambda_per_round": 7.33467813939237e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.000455,
+          "lambda_per_round": 7.584771406821122e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.00412,
+          "lambda_per_round": 0.0006878484210337543,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.0041,
+          "lambda_per_round": 0.0006845036278536609,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.015599688006239875,
+          "lambda_per_round": 0.002617010230448469,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.016979660406791865,
+          "lambda_per_round": 0.0028501751336774683,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.08892977614228764,
+          "lambda_per_round": 0.015402696221418655,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.09199632014719411,
+          "lambda_per_round": 0.015955810209566823,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": []
+    },
+    "RelayBP": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.000505,
+          "lambda_per_round": 8.418438220358926e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.00045,
+          "lambda_per_round": 7.501406636845065e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.004295,
+          "lambda_per_round": 0.0007171177493823233,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.00436,
+          "lambda_per_round": 0.0007279903060397608,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.01637967240655187,
+          "lambda_per_round": 0.002748765594788205,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.017039659206815865,
+          "lambda_per_round": 0.002860318924211458,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.0978227537565164,
+          "lambda_per_round": 0.01701102946322397,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.0984360625574977,
+          "lambda_per_round": 0.01712243525541135,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 1.1477272727272727,
+          "lo": 0.9746835443037974,
+          "hi": 1.3559322033898304
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 0.9890109890109889,
+          "lo": 0.8383838383838383,
+          "hi": 1.1724137931034484
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 1.0424757281553398,
+          "lo": 0.9892729439809297,
+          "hi": 1.0983606557377048
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 1.0634146341463415,
+          "lo": 1.00734394124847,
+          "hi": 1.123134328358209
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 1.05,
+          "lo": 0.96309963099631,
+          "hi": 1.1456692913385829
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 1.0035335689045937,
+          "lo": 0.9204152249134949,
+          "hi": 1.089928057553957
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 1.0999999999999999,
+          "lo": 1.020066889632107,
+          "hi": 1.1879699248120301
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 1.07,
+          "lo": 0.9969230769230769,
+          "hi": 1.1490066225165563
+        }
+      ]
+    },
+    "SlidingWindow": {
+      "lambda_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ler": 0.00045,
+          "lambda_per_round": 7.501406636845065e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ler": 0.00047,
+          "lambda_per_round": 7.834867801859158e-05,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ler": 0.00443,
+          "lambda_per_round": 0.0007396998747394301,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ler": 0.00444,
+          "lambda_per_round": 0.0007413727262755021,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ler": 0.01865962680746385,
+          "lambda_per_round": 0.0031343965001415786,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ler": 0.01865962680746385,
+          "lambda_per_round": 0.0031343965001415786,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ler": 0.10334253296534805,
+          "lambda_per_round": 0.018015962469072777,
+          "ler_is_bound": false
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ler": 0.11039558417663294,
+          "lambda_per_round": 0.019307572963087494,
+          "ler_is_bound": false
+        }
+      ],
+      "gap_to_mle_vs_p": [
+        {
+          "p": 0.001,
+          "basis": "X",
+          "ratio": 1.0227272727272727,
+          "lo": 0.8426966292134832,
+          "hi": 1.2465753424657535
+        },
+        {
+          "p": 0.001,
+          "basis": "Z",
+          "ratio": 1.0329670329670328,
+          "lo": 0.8543689320388349,
+          "hi": 1.2567567567567568
+        },
+        {
+          "p": 0.002,
+          "basis": "X",
+          "ratio": 1.0752427184466018,
+          "lo": 1.0188679245283019,
+          "hi": 1.1345911949685534
+        },
+        {
+          "p": 0.002,
+          "basis": "Z",
+          "ratio": 1.0829268292682928,
+          "lo": 1.0226130653266332,
+          "hi": 1.1460122699386504
+        },
+        {
+          "p": 0.003,
+          "basis": "X",
+          "ratio": 1.1961538461538461,
+          "lo": 1.092783505154639,
+          "hi": 1.3114035087719298
+        },
+        {
+          "p": 0.003,
+          "basis": "Z",
+          "ratio": 1.098939929328622,
+          "lo": 1.0068027210884354,
+          "hi": 1.2
+        },
+        {
+          "p": 0.005,
+          "basis": "X",
+          "ratio": 1.1620689655172414,
+          "lo": 1.0774193548387097,
+          "hi": 1.2591240875912408
+        },
+        {
+          "p": 0.005,
+          "basis": "Z",
+          "ratio": 1.2,
+          "lo": 1.1134020618556701,
+          "hi": 1.296028880866426
+        }
+      ]
+    }
+  }
+}

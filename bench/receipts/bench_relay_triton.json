@@ -1,0 +1,105 @@
+{
+  "config": {
+    "rounds": 6,
+    "p": 0.003,
+    "n_val": 2000,
+    "block_s": 256,
+    "relay": {
+      "gamma0": 0.1,
+      "pre_iter": 80,
+      "num_sets": 60,
+      "set_max_iter": 60,
+      "gamma_dist_interval": [
+        -0.24,
+        0.66
+      ],
+      "stop_nconv": 5,
+      "stopping_criterion": "nconv"
+    }
+  },
+  "structure": {
+    "n_checks": 252,
+    "n_bits": 1584,
+    "n_edges": 4536,
+    "MAXDEG_C": 20,
+    "MAXDEG_B": 3
+  },
+  "primitive_identity": {
+    "pre_leg_posterior_maxdiff": 1.7763568394002505e-15,
+    "memory_term_per_bit_agreement": 0.9996473524305556,
+    "n_probe": 256
+  },
+  "ler_identity": {
+    "oracle_logical_errors": 31,
+    "triton_logical_errors": 38,
+    "per_shot_agreement": 0.9875,
+    "n": 2000,
+    "ler_abs_diff": 7
+  },
+  "bench_triton_real": [
+    {
+      "shots": 512,
+      "dtype": "float64",
+      "mean_ms": 781.989,
+      "per_syndrome_us": 1527.323,
+      "throughput_shots_per_s": 654.7
+    },
+    {
+      "shots": 512,
+      "dtype": "float32",
+      "mean_ms": 809.478,
+      "per_syndrome_us": 1581.012,
+      "throughput_shots_per_s": 632.5
+    },
+    {
+      "shots": 2000,
+      "dtype": "float64",
+      "mean_ms": 1358.768,
+      "per_syndrome_us": 679.384,
+      "throughput_shots_per_s": 1471.9
+    },
+    {
+      "shots": 2000,
+      "dtype": "float32",
+      "mean_ms": 966.26,
+      "per_syndrome_us": 483.13,
+      "throughput_shots_per_s": 2069.8
+    }
+  ],
+  "bench_triton_random_worstcase": [
+    {
+      "shots": 1024,
+      "dtype": "float32",
+      "mean_ms": 534.295,
+      "per_syndrome_us": 521.773,
+      "throughput_shots_per_s": 1916.5
+    },
+    {
+      "shots": 4096,
+      "dtype": "float32",
+      "mean_ms": 1107.239,
+      "per_syndrome_us": 270.322,
+      "throughput_shots_per_s": 3699.3
+    }
+  ],
+  "cpu_relay_bp": {
+    "shots": 512,
+    "mean_ms": 857.756,
+    "per_syndrome_us": 1675.305,
+    "throughput_shots_per_s": 596.9
+  },
+  "verdict": {
+    "best_triton_real": {
+      "shots": 2000,
+      "dtype": "float32",
+      "mean_ms": 966.26,
+      "per_syndrome_us": 483.13,
+      "throughput_shots_per_s": 2069.8
+    },
+    "best_triton_throughput": 2069.8,
+    "best_triton_per_syndrome_us": 483.13,
+    "cpu_relay_bp_per_syndrome_us": 1675.305,
+    "throughput_speedup_vs_cpu_relay_bp": 3.5,
+    "ler_identity_match": true
+  }
+}

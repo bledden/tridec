@@ -1,0 +1,25 @@
+# Benchmark receipts — provenance
+
+These JSON files are the raw measurement receipts carried over from the research
+runs that validated the decoders in this package. They are the evidence behind
+the numbers cited in `docs/benchmark.md`. All were produced before this package
+was extracted; none are regenerated here.
+
+| File | What it is | Hardware / env |
+|---|---|---|
+| `zoo_grid.json` | Matched cross-decoder logical-error-rate (LER) grid on the [[72,12,6]] bivariate-bicycle code, 6 rounds, SI1000 noise, p ∈ {0.001, 0.002, 0.003, 0.005} × basis ∈ {X, Z}. One shared DEM per cell (sha256-pinned), one shot set (seed 0), every decoder decoding identical shots. Decoders: ldpc BP / BP-OSD-0 / BP-OSD-10 / BP-LSD, Tesseract (MLE anchor), Relay-BP (Rust), sliding-window. The per-cell `dem_hash` values here are the byte-fidelity gate for this package's test fixtures, and the per-decoder `fails` counts are the no-regression targets. | CPU. python 3.12.12, numpy 2.2.6, stim 1.15.0, ldpc 2.4.1, relay-bp 0.2.2, tesseract-decoder 0.1.1.dev20260526203925 |
+| `prereg.json` | The pre-registration committed before the grid ran: decoder configs, tie-break policies, shots-per-cell sizing, binding statistics. Provenance companion to `zoo_grid.json`. | n/a (plan document) |
+| `bench_triton_results.json` | Triton min-sum BP kernel vs the torch edge-list baseline: one-iteration hard agreement, full-decode LER identity (156 = 156 = 156 fails / 2000 shots for numpy / torch / Triton), and decode_batch throughput at batch 256–16384. | NVIDIA H200, CUDA 12.4, torch 2.4.1+cu124, triton 3.0.0 |
+| `bench_relay_triton.json` | Triton Relay-BP vs the `relay_bp` Rust oracle (F64): pre-leg posterior max-diff 1.8e-15, memory-term per-bit agreement 99.96%, full-relay LER identity (oracle 31 vs Triton 38 fails / 2000 shots, overlapping Wilson CIs), fp32/fp64 throughput. | NVIDIA H200, CUDA 12.4, torch 2.4.1, triton 3.0.0 |
+| `bench_relay_mi300x.json` | The same Relay-BP validation re-run unmodified on AMD: identical primitive-identity numbers (pre-leg max-diff 1.8e-15) and the same oracle-vs-Triton LER identity (31 vs 38 / 2000), plus MI300X throughput. The dual-vendor portability receipt. | AMD MI300X (gfx942), ROCm 7.0.0, torch 2.9.0.dev+rocm7.0.0, triton 3.4.0+rocm7.0.0 |
+| `bench_cudaq_compare.json` | Comparison against NVIDIA CUDA-Q QEC 0.6.0's GPU Relay-BP on the same 2000-shot workload: LER and throughput for both. **Read with the config-asymmetry caveat in `docs/benchmark.md`** — the CUDA-Q decoder was run with its own configuration surface, not a parameter-matched replica of ours. | NVIDIA H200, CUDA-Q QEC 0.6.0, torch 2.4.1+cu124 |
+| `latency_results.json` | Per-decoder latency/throughput sweep (CPU decoders + torch BP + Triton BP) with bootstrap CIs on per-syndrome latency, batch 1–16384. | NVIDIA H200 + host CPU; torch 2.4.1+cu124, triton 3.0.0 |
+
+## Modifications
+
+All files are byte-identical copies of the originals, except:
+
+- `latency_results.json`: re-serialized via `json.dump(..., indent=1)`, and the
+  single field `env.gpu_clock.lock_note` was reworded to remove the cloud
+  provider's name ("clock-locking not permitted on the cloud GPU container (no
+  permission); clocks left at default"). No measurement values were changed.

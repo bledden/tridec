@@ -1,0 +1,100 @@
+{
+  "config": {
+    "rounds": 6,
+    "p": 0.003,
+    "ms": 0.625,
+    "max_iter": 30,
+    "block_s": 256,
+    "n_val": 2000
+  },
+  "structure": {
+    "n_checks": 252,
+    "n_bits": 1584,
+    "n_edges": 4536,
+    "MAXDEG_C": 20,
+    "MAXDEG_B": 3
+  },
+  "one_iter_hard_agreement": 1.0,
+  "full_decode": {
+    "frac_exact_trt_vs_cpu": 0.9935,
+    "frac_exact_trt_vs_gpu": 0.9935,
+    "ler_cpu": 156,
+    "ler_gpu": 156,
+    "ler_triton": 156,
+    "n": 2000
+  },
+  "bench_decode_batch": [
+    {
+      "shots": 256,
+      "triton_mean_ms": 1.1182,
+      "triton_p99_9_ms": 1.1988,
+      "triton_throughput": 228931.7,
+      "torch_mean_ms": 13.8574,
+      "torch_p99_9_ms": 15.9114,
+      "torch_throughput": 18473.8,
+      "speedup_triton_over_torch": 12.392
+    },
+    {
+      "shots": 1024,
+      "triton_mean_ms": 1.1288,
+      "triton_p99_9_ms": 1.164,
+      "triton_throughput": 907130.8,
+      "torch_mean_ms": 41.8739,
+      "torch_p99_9_ms": 45.9316,
+      "torch_throughput": 24454.4,
+      "speedup_triton_over_torch": 37.095
+    },
+    {
+      "shots": 4096,
+      "triton_mean_ms": 3.6732,
+      "triton_p99_9_ms": 3.7067,
+      "triton_throughput": 1115117.0,
+      "torch_mean_ms": 181.6178,
+      "torch_p99_9_ms": 185.0789,
+      "torch_throughput": 22552.9,
+      "speedup_triton_over_torch": 49.445
+    },
+    {
+      "shots": 16384,
+      "triton_mean_ms": 13.0288,
+      "triton_p99_9_ms": 13.0764,
+      "triton_throughput": 1257518.6,
+      "torch_mean_ms": 713.3865,
+      "torch_p99_9_ms": 720.1941,
+      "torch_throughput": 22966.5,
+      "speedup_triton_over_torch": 54.754
+    }
+  ],
+  "bench_bp_core": [
+    {
+      "shots": 256,
+      "triton_mean_ms": 1.2287,
+      "torch_mean_ms": 11.4371,
+      "speedup_triton_over_torch": 9.309
+    },
+    {
+      "shots": 1024,
+      "triton_mean_ms": 1.584,
+      "torch_mean_ms": 32.2788,
+      "speedup_triton_over_torch": 20.378
+    },
+    {
+      "shots": 4096,
+      "triton_mean_ms": 5.1971,
+      "torch_mean_ms": 142.9783,
+      "speedup_triton_over_torch": 27.511
+    },
+    {
+      "shots": 16384,
+      "triton_mean_ms": 76.2333,
+      "torch_mean_ms": 559.4915,
+      "speedup_triton_over_torch": 7.339
+    }
+  ],
+  "verdict": {
+    "triton_beats_torch": true,
+    "best_speedup_e2e_decode_batch": 54.754,
+    "best_speedup_bp_core_only": 27.511,
+    "note": "BP-core-only is the honest kernel speedup; end-to-end additionally moves the observable projection to the GPU."
+  }
+}

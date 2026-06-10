@@ -1,0 +1,137 @@
+{
+  "env": {
+    "platform": "MI300X",
+    "gpu_arch": "gfx942",
+    "gpu_name_reported": "",
+    "rocm": "7.0.0",
+    "torch": "2.9.0.dev20250821+rocm7.0.0.git125803b7",
+    "triton": "3.4.0+rocm7.0.0.git56765e8c",
+    "python": "3.10.12"
+  },
+  "config": {
+    "rounds": 6,
+    "p": 0.003,
+    "n_val": 2000,
+    "block_s": 256,
+    "relay": {
+      "gamma0": 0.1,
+      "pre_iter": 80,
+      "num_sets": 60,
+      "set_max_iter": 60,
+      "gamma_dist_interval": [
+        -0.24,
+        0.66
+      ],
+      "stop_nconv": 5,
+      "stopping_criterion": "nconv"
+    }
+  },
+  "structure": {
+    "n_checks": 252,
+    "n_bits": 1584,
+    "n_edges": 4536,
+    "MAXDEG_C": 20,
+    "MAXDEG_B": 3
+  },
+  "primitive_identity": {
+    "pre_leg_posterior_maxdiff": 1.7763568394002505e-15,
+    "memory_term_per_bit_agreement": 0.9996473524305556,
+    "n_probe": 256
+  },
+  "ler_identity": {
+    "oracle_logical_errors": 31,
+    "triton_logical_errors": 38,
+    "per_shot_agreement": 0.988,
+    "n": 2000,
+    "ler_abs_diff": 7,
+    "oracle_wilson_ci": [
+      0.01094,
+      0.02192
+    ],
+    "triton_wilson_ci": [
+      0.01387,
+      0.02597
+    ],
+    "wilson_ci_overlap": true,
+    "statistically_indistinguishable": true
+  },
+  "bench_triton_real": [
+    {
+      "shots": 2000,
+      "dtype": "float32",
+      "mean_ms": 1051.179,
+      "p99_9_ms": 1082.998,
+      "per_syndrome_us": 525.59,
+      "throughput_shots_per_s": 1902.6
+    },
+    {
+      "shots": 2000,
+      "dtype": "float64",
+      "mean_ms": 1241.172,
+      "p99_9_ms": 1267.894,
+      "per_syndrome_us": 620.586,
+      "throughput_shots_per_s": 1611.4
+    },
+    {
+      "shots": 8192,
+      "dtype": "float32",
+      "mean_ms": 2273.87,
+      "p99_9_ms": 2278.275,
+      "per_syndrome_us": 277.572,
+      "throughput_shots_per_s": 3602.7
+    },
+    {
+      "shots": 8192,
+      "dtype": "float64",
+      "mean_ms": 3304.934,
+      "p99_9_ms": 3310.238,
+      "per_syndrome_us": 403.434,
+      "throughput_shots_per_s": 2478.7
+    }
+  ],
+  "bench_triton_random_worstcase": [
+    {
+      "shots": 2000,
+      "dtype": "float32",
+      "mean_ms": 760.607,
+      "p99_9_ms": 786.855,
+      "per_syndrome_us": 380.304,
+      "throughput_shots_per_s": 2629.5
+    },
+    {
+      "shots": 8192,
+      "dtype": "float32",
+      "mean_ms": 1676.207,
+      "p99_9_ms": 1684.041,
+      "per_syndrome_us": 204.615,
+      "throughput_shots_per_s": 4887.2
+    }
+  ],
+  "h200_reference": {
+    "gpu": "NVIDIA H200",
+    "triton": "3.0",
+    "ler_identity": {
+      "oracle_logical_errors": 31,
+      "triton_logical_errors": 38,
+      "per_shot_agreement": 0.9875,
+      "n": 2000
+    },
+    "best_real_fp32_per_syndrome_us": 483.13,
+    "best_real_fp32_shots": 2000,
+    "note": "portability comparison only; CUDA-Q QEC cannot run on AMD"
+  },
+  "verdict": {
+    "ran_on_gfx942": true,
+    "kernel_source_changes_needed": false,
+    "ler_statistically_indistinguishable": true,
+    "best_triton_real": {
+      "shots": 8192,
+      "dtype": "float32",
+      "mean_ms": 2273.87,
+      "p99_9_ms": 2278.275,
+      "per_syndrome_us": 277.572,
+      "throughput_shots_per_s": 3602.7
+    },
+    "portability_demonstrated": true
+  }
+}

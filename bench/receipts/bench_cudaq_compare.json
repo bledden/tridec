@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "gpu": "NVIDIA H200",
+    "cudaq_qec_version": "CUDA-Q QEC 0.6.0 (https://github.com/NVIDIA/cudaqx 84d18ca948a8582afe54035c85e2aceb3f3bee19)",
+    "torch": "2.4.1+cu124",
+    "structure": {
+      "n_checks": 252,
+      "n_err": 1584,
+      "n_obs": 12,
+      "n_shots": 2000,
+      "batch": 2000
+    }
+  },
+  "cudaq_relaybp_ler": [
+    {
+      "tag": "relaybp_no_osd",
+      "ler": 0.031,
+      "logical_errors": 62
+    },
+    {
+      "tag": "relaybp_osd0",
+      "ler": 0.0295,
+      "logical_errors": 59
+    },
+    {
+      "tag": "relaybp_osd10",
+      "ler": 0.0295,
+      "logical_errors": 59
+    }
+  ],
+  "cudaq_relaybp_throughput": [
+    {
+      "batch": 512,
+      "mean_ms": 6.166,
+      "p99_9_ms": 7.672,
+      "per_syndrome_us": 12.04,
+      "throughput_shots_per_s": 83033.7
+    },
+    {
+      "batch": 1024,
+      "mean_ms": 9.605,
+      "p99_9_ms": 11.357,
+      "per_syndrome_us": 9.38,
+      "throughput_shots_per_s": 106615.2
+    },
+    {
+      "batch": 2000,
+      "mean_ms": 17.608,
+      "p99_9_ms": 19.104,
+      "per_syndrome_us": 8.8,
+      "throughput_shots_per_s": 113585.2
+    },
+    {
+      "batch": 4096,
+      "mean_ms": 17.457,
+      "p99_9_ms": 20.346,
+      "per_syndrome_us": 4.26,
+      "throughput_shots_per_s": 234632.2
+    },
+    {
+      "batch": 8192,
+      "mean_ms": 16.274,
+      "p99_9_ms": 17.714,
+      "per_syndrome_us": 1.99,
+      "throughput_shots_per_s": 503380.9
+    }
+  ],
+  "triton_relaybp_ler": [
+    {
+      "dtype": "float32",
+      "ler": 0.016,
+      "logical_errors": 32
+    },
+    {
+      "dtype": "float64",
+      "ler": 0.019,
+      "logical_errors": 38
+    }
+  ],
+  "triton_relaybp_throughput": {
+    "float32": [
+      {
+        "batch": 512,
+        "mean_ms": 776.727,
+        "p99_9_ms": 864.278,
+        "per_syndrome_us": 1517.04,
+        "throughput_shots_per_s": 659.2
+      },
+      {
+        "batch": 1024,
+        "mean_ms": 792.679,
+        "p99_9_ms": 835.569,
+        "per_syndrome_us": 774.1,
+        "throughput_shots_per_s": 1291.8
+      },
+      {
+        "batch": 2000,
+        "mean_ms": 947.04,
+        "p99_9_ms": 985.446,
+        "per_syndrome_us": 473.52,
+        "throughput_shots_per_s": 2111.8
+      },
+      {
+        "batch": 4096,
+        "mean_ms": 945.509,
+        "p99_9_ms": 949.786,
+        "per_syndrome_us": 230.84,
+        "throughput_shots_per_s": 4332.1
+      },
+      {
+        "batch": 8192,
+        "mean_ms": 946.041,
+        "p99_9_ms": 950.372,
+        "per_syndrome_us": 115.48,
+        "throughput_shots_per_s": 8659.2
+      }
+    ],
+    "float64": [
+      {
+        "batch": 512,
+        "mean_ms": 743.009,
+        "p99_9_ms": 773.669,
+        "per_syndrome_us": 1451.19,
+        "throughput_shots_per_s": 689.1
+      },
+      {
+        "batch": 1024,
+        "mean_ms": 917.437,
+        "p99_9_ms": 927.178,
+        "per_syndrome_us": 895.93,
+        "throughput_shots_per_s": 1116.2
+      },
+      {
+        "batch": 2000,
+        "mean_ms": 1339.727,
+        "p99_9_ms": 1344.608,
+        "per_syndrome_us": 669.86,
+        "throughput_shots_per_s": 1492.8
+      }
+    ]
+  },
+  "cpu_relay_bp": {
+    "ler": 0.0155,
+    "logical_errors": 31,
+    "batch": 2000,
+    "mean_ms": 3298.191,
+    "per_syndrome_us": 1649.1,
+    "throughput_shots_per_s": 606.4,
+    "note": "CPU Rust relay_bp oracle, nconv stop_nconv=5 (lowest-weight) -- the LER reference + slowest baseline"
+  },
+  "verdict": {
+    "winner": "CUDA-Q QEC (throughput)",
+    "cudaq_best_throughput": {
+      "batch": 8192,
+      "mean_ms": 16.274,
+      "p99_9_ms": 17.714,
+      "per_syndrome_us": 1.99,
+      "throughput_shots_per_s": 503380.9
+    },
+    "triton_best_throughput_fp32": {
+      "batch": 8192,
+      "mean_ms": 946.041,
+      "p99_9_ms": 950.372,
+      "per_syndrome_us": 115.48,
+      "throughput_shots_per_s": 8659.2
+    },
+    "cudaq_over_triton_best": 58.1,
+    "at_matched_batch": 2000,
+    "cudaq_at_batch": {
+      "batch": 2000,
+      "mean_ms": 17.608,
+      "p99_9_ms": 19.104,
+      "per_syndrome_us": 8.8,
+      "throughput_shots_per_s": 113585.2
+    },
+    "triton_fp32_at_batch": {
+      "batch": 2000,
+      "mean_ms": 947.04,
+      "p99_9_ms": 985.446,
+      "per_syndrome_us": 473.52,
+      "throughput_shots_per_s": 2111.8
+    },
+    "cudaq_over_triton_at_batch": 53.8,
+    "cudaq_ler_no_osd": 0.031,
+    "triton_fp32_ler": 0.016,
+    "cpu_relay_bp_ler": 0.0155,
+    "ler_note": "CUDA-Q LER ~2x ours: its relay selection is FirstConv-style, not our lowest-weight-over-nconv=5 -- a config/algorithm asymmetry, not a kernel-speed artifact.",
+    "cudaq_over_cpu": 830.1,
+    "triton_over_cpu": 14.3
+  }
+}
