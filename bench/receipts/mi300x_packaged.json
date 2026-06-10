@@ -1,0 +1,179 @@
+{
+ "meta": {
+  "what": "MI300X PACKAGED-library validation: test-suite summary + benches through the installed tridec public API on the canonical BB .dem fixture (p=0.003, Z).",
+  "date": "2026-06-10",
+  "fixture_dem": "tests/fixtures/bb72/bb72_r6_p0.003_Z.dem",
+  "fixture_dem_sha256": "344fca525111866f7f9979b7f0b93be7d3c4cca97f4564808e912068a69d6f1c",
+  "shots_note": "shots sampled platform-locally from the provenance .stim circuit (seed 0); stim's seeded sampler is platform-dependent (benchmark.md \u00a75.1) so counts are not comparable shot-for-shot with darwin/H200 receipts \u2014 Wilson CIs are."
+ },
+ "env": {
+  "gpu_arch": "gfx942:sramecc+:xnack-",
+  "gpu_name": "",
+  "rocm_hip": "7.0.51831-a3e329ad8",
+  "torch": "2.9.0.dev20250821+rocm7.0.0.git125803b7",
+  "triton": "3.4.0+rocm7.0.0.git56765e8c",
+  "python": "3.10.12",
+  "platform": "linux/x86_64",
+  "container_image": "rocm/7.0:rocm7.0_pytorch_training_instinct_20250915",
+  "tridec": "0.1.0.dev0",
+  "stim": "1.15.0",
+  "ldpc": "2.4.1",
+  "relay-bp": "0.2.2",
+  "pymatching": "2.4.0",
+  "numpy": "1.26.4",
+  "sinter": "1.16.0"
+ },
+ "suite": {
+  "command": "python3 -m pytest tests/ -v -ra",
+  "exit_code": 0,
+  "counts": {
+   "passed": 88,
+   "skipped": 10
+  },
+  "duration_s": 121.53,
+  "skip_reasons": [
+   "SKIPPED [1] tests/test_api.py:85: triton+GPU available here; the unavailable path is moot",
+   "SKIPPED [1] tests/test_metal.py:23: triton-metal not installed",
+   "SKIPPED [8] tests/test_dem_hash_gate.py:81: strict text-hash identity vs zoo_grid pins is defined on the receipt platform (darwin/arm64): stim's DEM float computation and text rendering are platform-dependent (see docs/benchmark.md)"
+  ]
+ },
+ "structure": {
+  "n_det": 252,
+  "n_obs": 12,
+  "n_err": 1584
+ },
+ "ler_2000": {
+  "shots": 2000,
+  "seed": 0,
+  "bp_triton_fp32": {
+   "config": {
+    "decoder": "tridec.BpDecoder",
+    "backend": "triton",
+    "bp_method": "minimum_sum",
+    "ms_scaling_factor": 0.625,
+    "max_iter": 30,
+    "schedule": "parallel"
+   },
+   "fails": 166,
+   "ler": 0.083,
+   "ler_wilson95": [
+    0.07169353704562158,
+    0.09590533903320622
+   ],
+   "per_shot_agreement_vs_numpy": 0.996
+  },
+  "bp_numpy_fp64_reference": {
+   "fails": 166,
+   "ler": 0.083,
+   "ler_wilson95": [
+    0.07169353704562158,
+    0.09590533903320622
+   ]
+  },
+  "relay_triton_fp32": {
+   "config": {
+    "decoder": "tridec.RelayBpDecoder",
+    "backend": "triton",
+    "dtype": "float32",
+    "gamma0": 0.1,
+    "pre_iter": 80,
+    "num_sets": 60,
+    "set_max_iter": 60,
+    "gamma_dist_interval": [
+     -0.24,
+     0.66
+    ],
+    "stop_nconv": 5,
+    "stopping_criterion": "nconv"
+   },
+   "fails": 34,
+   "ler": 0.017,
+   "ler_wilson95": [
+    0.012190606557782523,
+    0.02366132904431298
+   ]
+  },
+  "relay_rust_oracle_f64": {
+   "fails": 31,
+   "ler": 0.0155,
+   "ler_wilson95": [
+    0.010940903471396528,
+    0.02191678348350051
+   ],
+   "per_shot_agreement_vs_triton": 0.988,
+   "wilson_ci_overlap_vs_triton": true
+  }
+ },
+ "throughput": {
+  "protocol": "decode_batch wall-clock, torch.cuda.synchronize bracketed, warmup=5, measure=20, real sampled syndromes",
+  "bp_triton_fp32": [
+   {
+    "shots": 2000,
+    "warmup": 5,
+    "iters": 20,
+    "mean_ms": 2.816,
+    "min_ms": 2.292,
+    "max_ms": 3.758,
+    "stdev_ms": 0.454,
+    "per_syndrome_us": 1.408,
+    "throughput_shots_per_s": 710108.2
+   },
+   {
+    "shots": 8192,
+    "warmup": 5,
+    "iters": 20,
+    "mean_ms": 7.166,
+    "min_ms": 7.085,
+    "max_ms": 7.288,
+    "stdev_ms": 0.05,
+    "per_syndrome_us": 0.875,
+    "throughput_shots_per_s": 1143178.0
+   }
+  ],
+  "relay_triton_fp32": [
+   {
+    "shots": 2000,
+    "warmup": 5,
+    "iters": 20,
+    "mean_ms": 1028.754,
+    "min_ms": 1011.586,
+    "max_ms": 1079.828,
+    "stdev_ms": 17.594,
+    "per_syndrome_us": 514.377,
+    "throughput_shots_per_s": 1944.1
+   },
+   {
+    "shots": 8192,
+    "warmup": 5,
+    "iters": 20,
+    "mean_ms": 2303.474,
+    "min_ms": 2298.16,
+    "max_ms": 2308.92,
+    "stdev_ms": 2.934,
+    "per_syndrome_us": 281.186,
+    "throughput_shots_per_s": 3556.4
+   }
+  ]
+ },
+ "prior_receipt_comparison": {
+  "prior_receipt": "bench_relay_mi300x.json",
+  "relay_fp32": [
+   {
+    "shots": 2000,
+    "dtype": "float32",
+    "prior_per_syndrome_us": 525.59,
+    "packaged_per_syndrome_us": 514.377,
+    "delta_pct": -2.13,
+    "note": "prior = source-repo harness (bench_relay_mi300x.json); packaged = public decode_batch API incl. host<->device transfers and observable mapping"
+   },
+   {
+    "shots": 8192,
+    "dtype": "float32",
+    "prior_per_syndrome_us": 277.572,
+    "packaged_per_syndrome_us": 281.186,
+    "delta_pct": 1.3,
+    "note": "prior = source-repo harness (bench_relay_mi300x.json); packaged = public decode_batch API incl. host<->device transfers and observable mapping"
+   }
+  ]
+ }
+}

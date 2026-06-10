@@ -80,8 +80,8 @@ oracle for the Triton path.
 | Environment | Status |
 |---|---|
 | CPU (any) | numpy BP reference; torch BP bit-identical to numpy at fp64 (one iteration), LER-identical full decode |
-| NVIDIA H200, CUDA 12.4, torch 2.4.1, triton 3.0.0 | Triton BP: ≥99.5% hard-decision agreement vs fp64 references, LER-identical (156 = 156 = 156 fails / 2000 shots vs numpy/torch). Triton Relay-BP: LER-matches the `relay-bp` Rust oracle (31 vs 38 fails / 2000, overlapping Wilson CIs) |
-| AMD MI300X, ROCm 7.0.0, torch 2.9, triton 3.4.0 | Same kernels, unmodified: identical primitive-identity numbers (pre-leg posterior max-diff 1.8e-15) and the same oracle-vs-Triton LER identity |
+| NVIDIA H200, CUDA 12.4, torch 2.4.1, triton 3.0.0 | Triton BP: ≥99.5% hard-decision agreement vs fp64 references, LER-identical (156 = 156 = 156 fails / 2000 shots vs numpy/torch). Triton Relay-BP: LER-matches the `relay-bp` Rust oracle (31 vs 38 fails / 2000, overlapping Wilson CIs) — carried source-repo receipts |
+| AMD MI300X, ROCm 7.0.0, torch 2.9, triton 3.4.0 | Same kernels, unmodified: identical primitive-identity numbers (pre-leg posterior max-diff 1.8e-15) and the same oracle-vs-Triton LER identity (carried receipts) — **and validated through the installed package for v0.1.0** (`bench/receipts/mi300x_packaged.json`): full suite 88 passed / 10 skipped on gfx942 (GPU tiers bind, darwin-only strict tiers skip), packaged-API BP 166 = numpy 166 fails / 2000, Relay-BP fp32 34 vs Rust oracle 31 (overlapping CIs), throughput within ±2.2% of the carried receipt |
 | Apple silicon (M4 Max), triton-metal | **Experimental, spike-validated only** (`bench/receipts/metal_spike.md`): both kernels pass the same correctness gates at fp32; see the section below |
 
 ## Experimental: Apple silicon (Metal)
@@ -138,12 +138,23 @@ must hash to the exact DEM sha256s recorded in the carried `zoo_grid.json`
 receipt, and a full 16,667-shot cell must reproduce the recorded
 logical-failure counts of the `ldpc` reference adapters exactly.
 
+For v0.1.0 the WHOLE grid was re-decoded in the receipt environment
+(`bench/full_grid_noregression.py`): 31 of 32 (cell, decoder) failure counts
+reproduce **exactly** — all 24 BP / BP-OSD-0 / BP-OSD-10 counts, and 7 of 8
+BPLSD counts. The single deviation (BPLSD, p=0.002/X: 879 vs 880, one shot
+in 200,000) is attributed by a same-environment repeat experiment to
+run-to-run nondeterminism inside ldpc's `BpLsdDecoder` itself (identical
+shots, fresh instances: 879/880/879) — documented in
+`bench/receipts/full_grid_noregression.json`.
+
 ## Status
 
-`0.1.0a1` (PyPI pre-release) — APIs may move. The kernels and their validation
-receipts are stable; the packaging, public API surface and docs are young. GPU
+`0.1.0` — first release. The kernels and their validation receipts are
+stable; the public API surface is young and may still move before 1.0. GPU
 paths require triton + a CUDA/ROCm GPU (or the experimental triton-metal
 environment); the GPU/metal test tiers skip cleanly where unavailable.
+Validated through the installed package on MI300X/ROCm (v0.1.0) and via
+carried receipts on H200/CUDA; Metal is experimental.
 
 ## License
 

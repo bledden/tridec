@@ -1,0 +1,306 @@
+{
+ "meta": {
+  "STATUS": "OFFICIAL Relay-BP surface receipts (triton fp32, ROCm GPU) \u2014 supersedes the PRELIMINARY Metal sample for the official table; the Metal receipt remains as the Metal-path record.",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "linux",
+   "machine": "x86_64",
+   "python": "3.10.12",
+   "gpu_arch": "gfx942:sramecc+:xnack-",
+   "gpu_name": "",
+   "rocm_hip": "7.0.51831-a3e329ad8"
+  },
+  "versions": {
+   "stim": "1.15.0",
+   "pymatching": "2.4.0",
+   "torch": "2.9.0.dev20250821+rocm7.0.0.git125803b7",
+   "triton": "3.4.0+rocm7.0.0.git56765e8c",
+   "numpy": "1.26.4",
+   "tridec": "0.1.0.dev0",
+   "relay_bp_oracle": "0.2.2"
+  },
+  "protocol": "one shot set per cell (seed recorded; platform-local stream); relay + BP on the raw DEM via the packaged API (backend='triton', fp32), MWPM on the decomposed DEM, SAME shots, this host. Relay config = validated defaults (relay_bp oracle configuration); decodes chunked at 8192."
+ },
+ "cells": [
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.003,
+   "shots": 50000,
+   "seed": 20260610,
+   "n_det": 24,
+   "n_obs": 1,
+   "relay_triton_fp32": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "triton",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 359,
+    "ler": 0.00718,
+    "ler_wilson95": [
+     0.00647685921235544,
+     0.007958863662184665
+    ],
+    "decode_s": 14.613304403999564,
+    "shots_per_s": 3421.5
+   },
+   "bp_triton_fp32": {
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "triton",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "fails": 2060,
+    "ler": 0.0412,
+    "ler_wilson95": [
+     0.0394928156264082,
+     0.0429776800004718
+    ],
+    "decode_s": 0.02113165800005845,
+    "shots_per_s": 2366118.2
+   },
+   "pymatching_mwpm_same_shots": {
+    "fails": 329,
+    "ler": 0.00658,
+    "ler_wilson95": [
+     0.00590824112691087,
+     0.007327573938945992
+    ],
+    "decode_s": 0.0063164250000227185
+   },
+   "relay_vs_mwpm": {
+    "ler_ratio": 1.0911854103343466,
+    "wilson_ci_overlap": true
+   },
+   "darwin_surface_cpu_reference": {
+    "note": "surface_cpu.json counts on the SAME (d, r, p, shots, seed) but a DIFFERENT platform-local shot stream (darwin/arm64) \u2014 context only, not shot-matched",
+    "bp_torch_cpu_fails": 1966,
+    "pymatching_fails": 321
+   }
+  },
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.005,
+   "shots": 50000,
+   "seed": 20260610,
+   "n_det": 24,
+   "n_obs": 1,
+   "relay_triton_fp32": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "triton",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 928,
+    "ler": 0.01856,
+    "ler_wilson95": [
+     0.01741343493806103,
+     0.019780539374504587
+    ],
+    "decode_s": 7.051760890999958,
+    "shots_per_s": 7090.4
+   },
+   "bp_triton_fp32": {
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "triton",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "fails": 3840,
+    "ler": 0.0768,
+    "ler_wilson95": [
+     0.0744983828605304,
+     0.07916664274822202
+    ],
+    "decode_s": 0.015718641000148637,
+    "shots_per_s": 3180936.6
+   },
+   "pymatching_mwpm_same_shots": {
+    "fails": 935,
+    "ler": 0.0187,
+    "ler_wilson95": [
+     0.017549058071913377,
+     0.019924894729345
+    ],
+    "decode_s": 0.010860839000088163
+   },
+   "relay_vs_mwpm": {
+    "ler_ratio": 0.9925133689839573,
+    "wilson_ci_overlap": true
+   },
+   "darwin_surface_cpu_reference": {
+    "note": "surface_cpu.json counts on the SAME (d, r, p, shots, seed) but a DIFFERENT platform-local shot stream (darwin/arm64) \u2014 context only, not shot-matched",
+    "bp_torch_cpu_fails": 3725,
+    "pymatching_fails": 841
+   }
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.003,
+   "shots": 50000,
+   "seed": 20260610,
+   "n_det": 120,
+   "n_obs": 1,
+   "relay_triton_fp32": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "triton",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 729,
+    "ler": 0.01458,
+    "ler_wilson95": [
+     0.013566015679272812,
+     0.01566857016902729
+    ],
+    "decode_s": 38.15238669400037,
+    "shots_per_s": 1310.5
+   },
+   "bp_triton_fp32": {
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "triton",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "fails": 4382,
+    "ler": 0.08764,
+    "ler_wilson95": [
+     0.08519297889044199,
+     0.09015038112852104
+    ],
+    "decode_s": 21.16177337499994,
+    "shots_per_s": 2362.8
+   },
+   "pymatching_mwpm_same_shots": {
+    "fails": 168,
+    "ler": 0.00336,
+    "ler_wilson95": [
+     0.0028895055756044752,
+     0.003906804250318981
+    ],
+    "decode_s": 0.06203634199982844
+   },
+   "relay_vs_mwpm": {
+    "ler_ratio": 4.339285714285714,
+    "wilson_ci_overlap": false
+   },
+   "darwin_surface_cpu_reference": {
+    "note": "surface_cpu.json counts on the SAME (d, r, p, shots, seed) but a DIFFERENT platform-local shot stream (darwin/arm64) \u2014 context only, not shot-matched",
+    "bp_torch_cpu_fails": 4340,
+    "pymatching_fails": 173
+   }
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.005,
+   "shots": 50000,
+   "seed": 20260610,
+   "n_det": 120,
+   "n_obs": 1,
+   "relay_triton_fp32": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "triton",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 2571,
+    "ler": 0.05142,
+    "ler_wilson95": [
+     0.04951836964259823,
+     0.05339055565885301
+    ],
+    "decode_s": 16.08597880100001,
+    "shots_per_s": 3108.3
+   },
+   "bp_triton_fp32": {
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "triton",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "fails": 7987,
+    "ler": 0.15974,
+    "ler_wilson95": [
+     0.15655482915741387,
+     0.16297745253831888
+    ],
+    "decode_s": 0.0614908010002182,
+    "shots_per_s": 813129.8
+   },
+   "pymatching_mwpm_same_shots": {
+    "fails": 685,
+    "ler": 0.0137,
+    "ler_wilson95": [
+     0.012717804818044328,
+     0.01475691624418702
+    ],
+    "decode_s": 0.10620680500005619
+   },
+   "relay_vs_mwpm": {
+    "ler_ratio": 3.7532846715328465,
+    "wilson_ci_overlap": false
+   },
+   "darwin_surface_cpu_reference": {
+    "note": "surface_cpu.json counts on the SAME (d, r, p, shots, seed) but a DIFFERENT platform-local shot stream (darwin/arm64) \u2014 context only, not shot-matched",
+    "bp_torch_cpu_fails": 7964,
+    "pymatching_fails": 699
+   }
+  }
+ ]
+}

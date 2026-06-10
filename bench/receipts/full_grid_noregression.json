@@ -1,0 +1,403 @@
+{
+ "meta": {
+  "what": "full-grid EXACT no-regression: 8 BB cells x ldpc-family adapters (BP, BPOSD-0, BPOSD-10, BPLSD) through run_matched, each cell at zoo_grid's exact shots/seed; per-(cell,decoder) failure counts must EQUAL the pinned zoo_grid counts.",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "darwin",
+   "machine": "arm64",
+   "python": "3.12.12"
+  },
+  "versions": {
+   "stim": "1.15.0",
+   "ldpc": "2.4.1",
+   "numpy": "2.2.6",
+   "tridec": "0.1.0.dev0"
+  },
+  "zoo_grid_env": {
+   "python": "3.12.12",
+   "numpy": "2.2.6",
+   "stim": "1.15.0",
+   "ldpc": "2.4.1",
+   "tesseract_decoder": "0.1.1.dev20260526203925",
+   "relay_bp": "0.2.2"
+  }
+ },
+ "all_exact": false,
+ "cells": [
+  {
+   "p": 0.001,
+   "basis": "X",
+   "rounds": 6,
+   "shots": 200000,
+   "seed": 0,
+   "dem_hash": "c4ac7b144118c58bc9067f989f2303df4c5cb29e788cd05889df5256ba7c16e7",
+   "dem_hash_pinned": "c4ac7b144118c58bc9067f989f2303df4c5cb29e788cd05889df5256ba7c16e7",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1239,
+     "fails_pinned": 1239,
+     "exact_match": true,
+     "decode_s": 17.382670291000977
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 98,
+     "fails_pinned": 98,
+     "exact_match": true,
+     "decode_s": 17.982166666013654
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 93,
+     "fails_pinned": 93,
+     "exact_match": true,
+     "decode_s": 26.327198541985126
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 91,
+     "fails_pinned": 91,
+     "exact_match": true,
+     "decode_s": 19.001889042003313
+    }
+   ],
+   "cell_wall_s": 80.85078974999487
+  },
+  {
+   "p": 0.001,
+   "basis": "Z",
+   "rounds": 6,
+   "shots": 200000,
+   "seed": 0,
+   "dem_hash": "429668211e2e1b23e1674215382c151680f6042775d6565640ffe8a17d062d8e",
+   "dem_hash_pinned": "429668211e2e1b23e1674215382c151680f6042775d6565640ffe8a17d062d8e",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1268,
+     "fails_pinned": 1268,
+     "exact_match": true,
+     "decode_s": 18.099110584007576
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 90,
+     "fails_pinned": 90,
+     "exact_match": true,
+     "decode_s": 18.611064583994448
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 95,
+     "fails_pinned": 95,
+     "exact_match": true,
+     "decode_s": 26.85764149998431
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 88,
+     "fails_pinned": 88,
+     "exact_match": true,
+     "decode_s": 19.382567749998998
+    }
+   ],
+   "cell_wall_s": 83.11586987500777
+  },
+  {
+   "p": 0.002,
+   "basis": "X",
+   "rounds": 6,
+   "shots": 200000,
+   "seed": 0,
+   "dem_hash": "b699ab2ef93569ffe18ba18f26c4294e603f023a9cef43e6672575908911c55f",
+   "dem_hash_pinned": "b699ab2ef93569ffe18ba18f26c4294e603f023a9cef43e6672575908911c55f",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 5523,
+     "fails_pinned": 5523,
+     "exact_match": true,
+     "decode_s": 26.12189287500223
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 906,
+     "fails_pinned": 906,
+     "exact_match": true,
+     "decode_s": 27.19206108400249
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 843,
+     "fails_pinned": 843,
+     "exact_match": true,
+     "decode_s": 62.04555066701141
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 879,
+     "fails_pinned": 880,
+     "exact_match": false,
+     "decode_s": 27.974281375005376
+    }
+   ],
+   "cell_wall_s": 143.54289658300695
+  },
+  {
+   "p": 0.002,
+   "basis": "Z",
+   "rounds": 6,
+   "shots": 200000,
+   "seed": 0,
+   "dem_hash": "450d24861880ac7e22e2e1cd259a5f4e263cc4fa6eeabbcb9d0cc65e3b0535c3",
+   "dem_hash_pinned": "450d24861880ac7e22e2e1cd259a5f4e263cc4fa6eeabbcb9d0cc65e3b0535c3",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 5545,
+     "fails_pinned": 5545,
+     "exact_match": true,
+     "decode_s": 25.88806291698711
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 898,
+     "fails_pinned": 898,
+     "exact_match": true,
+     "decode_s": 27.006409583002096
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 847,
+     "fails_pinned": 847,
+     "exact_match": true,
+     "decode_s": 61.76172199999564
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 874,
+     "fails_pinned": 874,
+     "exact_match": true,
+     "decode_s": 27.76194833300542
+    }
+   ],
+   "cell_wall_s": 142.63060900001437
+  },
+  {
+   "p": 0.003,
+   "basis": "X",
+   "rounds": 6,
+   "shots": 16667,
+   "seed": 0,
+   "dem_hash": "099e055aa6b22aa430d81688282fa940f9a5969f95036f7ecd1e61a76e375e2c",
+   "dem_hash_pinned": "099e055aa6b22aa430d81688282fa940f9a5969f95036f7ecd1e61a76e375e2c",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1384,
+     "fails_pinned": 1384,
+     "exact_match": true,
+     "decode_s": 3.197501332993852
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 294,
+     "fails_pinned": 294,
+     "exact_match": true,
+     "decode_s": 3.484515374992043
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 275,
+     "fails_pinned": 275,
+     "exact_match": true,
+     "decode_s": 11.852155458007473
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 286,
+     "fails_pinned": 286,
+     "exact_match": true,
+     "decode_s": 3.7375899170001503
+    }
+   ],
+   "cell_wall_s": 22.306864625017624
+  },
+  {
+   "p": 0.003,
+   "basis": "Z",
+   "rounds": 6,
+   "shots": 16667,
+   "seed": 0,
+   "dem_hash": "0545b676f384a241a81a4b6975f651cf8a8803a00e74280f12d150976f0a576f",
+   "dem_hash_pinned": "0545b676f384a241a81a4b6975f651cf8a8803a00e74280f12d150976f0a576f",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1346,
+     "fails_pinned": 1346,
+     "exact_match": true,
+     "decode_s": 3.1570979170210194
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 311,
+     "fails_pinned": 311,
+     "exact_match": true,
+     "decode_s": 3.4281076249899343
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 293,
+     "fails_pinned": 293,
+     "exact_match": true,
+     "decode_s": 11.430792582978029
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 298,
+     "fails_pinned": 298,
+     "exact_match": true,
+     "decode_s": 3.6666868750180583
+    }
+   ],
+   "cell_wall_s": 21.71839095800533
+  },
+  {
+   "p": 0.005,
+   "basis": "X",
+   "rounds": 6,
+   "shots": 3261,
+   "seed": 0,
+   "dem_hash": "b5df170fe9e854f21ab5b8c5acc5664abe71f2d0b795f369d7a722c0518d9d70",
+   "dem_hash_pinned": "b5df170fe9e854f21ab5b8c5acc5664abe71f2d0b795f369d7a722c0518d9d70",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1047,
+     "fails_pinned": 1047,
+     "exact_match": true,
+     "decode_s": 1.2224007499753498
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 361,
+     "fails_pinned": 361,
+     "exact_match": true,
+     "decode_s": 1.4813797500100918
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 301,
+     "fails_pinned": 301,
+     "exact_match": true,
+     "decode_s": 7.265942666999763
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 339,
+     "fails_pinned": 339,
+     "exact_match": true,
+     "decode_s": 1.8956171250029001
+    }
+   ],
+   "cell_wall_s": 11.890343082981417
+  },
+  {
+   "p": 0.005,
+   "basis": "Z",
+   "rounds": 6,
+   "shots": 3261,
+   "seed": 0,
+   "dem_hash": "b476f1f23f666e19584a2b43d5e7ba2ede14982a72d97d45ceef428c9b5b24d5",
+   "dem_hash_pinned": "b476f1f23f666e19584a2b43d5e7ba2ede14982a72d97d45ceef428c9b5b24d5",
+   "dem_hash_exact_match": true,
+   "decoders": [
+    {
+     "name": "BP",
+     "fails_ours": 1055,
+     "fails_pinned": 1055,
+     "exact_match": true,
+     "decode_s": 1.2111877080169506
+    },
+    {
+     "name": "BPOSD-0",
+     "fails_ours": 357,
+     "fails_pinned": 357,
+     "exact_match": true,
+     "decode_s": 1.4444515419891104
+    },
+    {
+     "name": "BPOSD-10",
+     "fails_ours": 315,
+     "fails_pinned": 315,
+     "exact_match": true,
+     "decode_s": 7.17157145802048
+    },
+    {
+     "name": "BPLSD",
+     "fails_ours": 350,
+     "fails_pinned": 350,
+     "exact_match": true,
+     "decode_s": 1.8372112920042127
+    }
+   ],
+   "cell_wall_s": 11.688245666999137
+  }
+ ],
+ "total_wall_s": 518.7420076659764,
+ "bplsd_determinism_probe": {
+  "what": "5 repeats of BPLSD (ldpc.BpLsdDecoder, lsd_cs order 10, pinned config) on the byte-identical 200000-shot set of cell p=0.002 X (seed 0), fresh decoder instance per repeat, one process",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "darwin",
+   "machine": "arm64",
+   "python": "3.12.12"
+  },
+  "fails_per_repeat": [
+   879,
+   880,
+   880,
+   879,
+   879
+  ],
+  "per_shot_flips_vs_repeat0": [
+   {
+    "vs_repeat0": 1,
+    "n_shots_differing": 1,
+    "shot_indices": [
+     34468
+    ]
+   },
+   {
+    "vs_repeat0": 2,
+    "n_shots_differing": 1,
+    "shot_indices": [
+     34468
+    ]
+   },
+   {
+    "vs_repeat0": 3,
+    "n_shots_differing": 0,
+    "shot_indices": []
+   },
+   {
+    "vs_repeat0": 4,
+    "n_shots_differing": 0,
+    "shot_indices": []
+   }
+  ],
+  "pinned_zoo_grid_fails": 880,
+  "first_full_grid_run_fails": 879,
+  "run_to_run_deterministic": false,
+  "reading": "BpLsdDecoder is NOT run-to-run deterministic on this cell: identical environment + identical shots produce both 879 and 880, with exactly one shot flipping its prediction between repeats. The full-grid deviation (879 vs pinned 880) is attributable to nondeterminism inside the upstream lsd_cs implementation, not to a regression in tridec's harness, adapters, fixtures or sampling. The deterministic ldpc adapters (BP, BPOSD-0, BPOSD-10) reproduced all 24 pinned counts exactly."
+ }
+}
