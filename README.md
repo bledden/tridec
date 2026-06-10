@@ -1,5 +1,12 @@
 # tridec
 
+[![ci](https://github.com/bledden/tridec/actions/workflows/ci.yml/badge.svg)](https://github.com/bledden/tridec/actions/workflows/ci.yml)
+
+*Badge honesty: CI is CPU-only (ubuntu + macos arm64; the macos lane binds the
+strict exact-count receipt gates). There are no GPU runners — the CUDA/ROCm
+kernel paths are validated by the carried H200/MI300X receipts in
+`bench/receipts/`, and the experimental Metal tier runs on a local machine.*
+
 An open, vendor-portable GPU decoder library for quantum LDPC codes — Triton
 min-sum BP and Relay-BP decoders that consume any stim `DetectorErrorModel` or
 raw parity-check matrices, with CPU reference implementations, validated
