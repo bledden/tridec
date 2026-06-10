@@ -55,7 +55,7 @@ jobs:
       - name: Install package + pinned receipt deps
         run: |
           python -m pip install -e ".[dev]" "stim==1.15.0" "ldpc==2.4.1"
-      - name: Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)
+      - name: "Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)"
         continue-on-error: true
         timeout-minutes: 10
         run: python -m pip install "relay-bp[stim]>=0.2.2"
@@ -75,7 +75,7 @@ jobs:
         run: |
           python -m pip install torch
           python -m pip install -e ".[dev]" "stim==1.15.0" "ldpc==2.4.1"
-      - name: Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)
+      - name: "Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)"
         continue-on-error: true
         timeout-minutes: 10
         run: python -m pip install "relay-bp[stim]>=0.2.2"
