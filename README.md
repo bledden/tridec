@@ -1,4 +1,4 @@
-# portable-qec
+# tridec
 
 An open, vendor-portable GPU decoder library for quantum LDPC codes — Triton
 min-sum BP and Relay-BP decoders that consume any stim `DetectorErrorModel` or
@@ -15,10 +15,10 @@ H200 (CUDA 12.4, triton 3.0) and an AMD MI300X (ROCm 7.0, triton 3.4) — see
 ## Install
 
 ```bash
-pip install portable-qec                # numpy CPU reference only
-pip install "portable-qec[torch]"       # + batched torch backend (CPU/GPU)
-pip install "portable-qec[gpu]"         # + Triton GPU kernels (CUDA or ROCm)
-pip install "portable-qec[decoders]"    # + ldpc / relay-bp reference adapters
+pip install tridec                # numpy CPU reference only
+pip install "tridec[torch]"       # + batched torch backend (CPU/GPU)
+pip install "tridec[gpu]"         # + Triton GPU kernels (CUDA or ROCm)
+pip install "tridec[decoders]"    # + ldpc / relay-bp reference adapters
 ```
 
 *(Not yet on PyPI — install from source with `pip install -e .` for now.)*
@@ -27,12 +27,12 @@ pip install "portable-qec[decoders]"    # + ldpc / relay-bp reference adapters
 
 ```python
 import stim
-import portable_qec
+import tridec
 
 circuit = stim.Circuit.from_file("memory.stim")
 dem = circuit.detector_error_model(decompose_errors=False)
 
-decoder = portable_qec.from_dem(dem, backend="auto")   # triton > torch > numpy
+decoder = tridec.from_dem(dem, backend="auto")   # triton > torch > numpy
 
 dets, obs = circuit.compile_detector_sampler(seed=0).sample(
     100_000, separate_observables=True)
@@ -40,8 +40,8 @@ pred = decoder.decode_batch(dets)                      # (shots, n_obs) bool
 print("logical error rate:", (pred != obs).any(axis=1).mean())
 ```
 
-Raw matrices work too: `portable_qec.from_matrices(H, priors, observables=Lo)`.
-Relay-BP: `portable_qec.from_dem(dem, algorithm="relay")` (Triton backend only).
+Raw matrices work too: `tridec.from_matrices(H, priors, observables=Lo)`.
+Relay-BP: `tridec.from_dem(dem, algorithm="relay")` (Triton backend only).
 
 ## Backend × algorithm matrix (honest availability)
 
@@ -51,7 +51,7 @@ Relay-BP: `portable_qec.from_dem(dem, algorithm="relay")` (Triton backend only).
 | Relay-BP | no | no | yes (CUDA + ROCm) |
 
 There is no in-package CPU Relay-BP; its CPU reference is IBM's `relay-bp`
-Rust decoder, wrapped in `portable_qec.adapters` and used as the validation
+Rust decoder, wrapped in `tridec.adapters` and used as the validation
 oracle for the Triton path.
 
 ## What's validated where
@@ -68,7 +68,7 @@ ldpc 2.4.1, relay-bp 0.2.2, torch 2.4.1 / 2.9, triton 3.0 / 3.4.
 
 ## Validation discipline
 
-`portable_qec.validation` ships the matched-protocol harness the numbers were
+`tridec.validation` ships the matched-protocol harness the numbers were
 produced with: `dem_hash` (sha256 of the DEM's canonical bytes), `run_matched`
 (one shared DEM, one shot set, fail-fast DEM-identity and tie-break gates),
 Wilson/TOST statistics and a paired per-shot gap-to-MLE bootstrap. The test

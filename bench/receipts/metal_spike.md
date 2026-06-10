@@ -1,16 +1,16 @@
-# Metal spike: portable-qec Triton kernels on Apple Silicon via triton-metal
+# Metal spike: tridec Triton kernels on Apple Silicon via triton-metal
 
 **Date:** 2026-06-09
 **Verdict:** PASS — both `BpTriton` and `RelayBpTriton` (fp32) pass all existing
-correctness gates on the Mac GPU, with **zero source changes to portable-qec**.
+correctness gates on the Mac GPU, with **zero source changes to tridec**.
 
 ## Environment
 
 - Machine: Apple M4 Max, macOS (Darwin 24.6.0)
-- triton-metal: `/Users/bledden/Documents/triton-metal` @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree, editable install)
-- triton: 3.7.0 (`3.7.0+git4da2e268`, local source build at `/Users/bledden/Documents/triton`, editable)
+- triton-metal: `<triton-metal checkout>` @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree, editable install)
+- triton: 3.7.0 (`3.7.0+git4da2e268`, local source build at `<triton checkout>`, editable)
 - torch 2.9.1 / stim 1.15.0 / relay-bp 0.2.2 / Python 3.14.4 (Homebrew)
-- portable-qec: working tree, editable, no GPU extra (triton came via triton-metal's env)
+- tridec: working tree, editable, no GPU extra (triton came via triton-metal's env)
 
 ## Venv recipe
 
@@ -18,7 +18,7 @@ correctness gates on the Mac GPU, with **zero source changes to portable-qec**.
 # triton 3.7.0 (source build) + triton-metal + torch already live in the
 # Homebrew python3 site; inherit them instead of rebuilding triton from source.
 /opt/homebrew/bin/python3 -m venv --system-site-packages /tmp/pq-metal-venv
-/tmp/pq-metal-venv/bin/pip install -e /Users/bledden/Documents/portable-qec --no-deps
+/tmp/pq-metal-venv/bin/pip install -e <repo> --no-deps
 /tmp/pq-metal-venv/bin/pip install "relay-bp[stim]>=0.2.2"   # relay oracle only
 ```
 
@@ -29,7 +29,7 @@ None required. triton-metal's documented usage pattern is **CPU torch tensors**
 "Not mps"). Both backends already parameterize `device=` on every entry point,
 so the gates were run with `device="cpu"`; for relay, `dtype="float32"` (an
 existing constructor parameter — Metal has no fp64). No working-tree edits;
-`git status` of portable-qec is clean.
+`git status` of tridec is clean.
 
 ## Results (gate logic mirrored from tests/test_bp_triton.py + test_relay_triton.py, 2000 shots, seed 0)
 

@@ -10,9 +10,9 @@ import pytest
 
 from conftest import load_surface_circuit
 
-from portable_qec.backends.bp_numpy import BpBaseline
-from portable_qec.dem import extract
-from portable_qec.validation import wilson_ci
+from tridec.backends.bp_numpy import BpBaseline
+from tridec.dem import extract
+from tridec.validation import wilson_ci
 
 MS = 0.625  # normalized min-sum scaling factor (the validated default)
 

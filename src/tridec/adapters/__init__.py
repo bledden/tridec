@@ -3,11 +3,11 @@
 These wrap the standard CPU reference implementations — the `ldpc` package's
 BP / BP-OSD / BP-LSD and IBM's `relay-bp` Rust decoder — behind the same
 ``decode_batch(dets) -> predicted_observables`` surface as the native
-backends, so a matched harness (``portable_qec.validation.run_matched``) can
+backends, so a matched harness (``tridec.validation.run_matched``) can
 decode the SAME shots with every decoder (apples-to-apples LER). They are the
 validation targets the GPU kernels are held against.
 
-Install with the ``decoders`` extra: ``pip install portable-qec[decoders]``.
+Install with the ``decoders`` extra: ``pip install tridec[decoders]``.
 The module imports without either package; each factory raises (or the
 ``*_available()`` probes return False) when its dependency is missing.
 

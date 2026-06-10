@@ -12,8 +12,8 @@ torch = pytest.importorskip("torch")
 
 from conftest import load_bb_circuit
 
-from portable_qec.backends.bp_numpy import BpBaseline
-from portable_qec.backends.bp_torch import BpGpu
+from tridec.backends.bp_numpy import BpBaseline
+from tridec.backends.bp_torch import BpGpu
 
 MS = 0.625
 DEVICE = "cpu"

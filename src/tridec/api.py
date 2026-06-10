@@ -23,7 +23,7 @@ Algorithms per backend (honest availability matrix):
   ===========  =======  =======  ========
 
 Relay-BP has no in-package CPU implementation; its CPU reference is IBM's
-``relay-bp`` Rust decoder, available through ``portable_qec.adapters`` (the
+``relay-bp`` Rust decoder, available through ``tridec.adapters`` (the
 ``decoders`` extra) and used as the validation oracle for the Triton path.
 """
 import numpy as np
@@ -96,7 +96,7 @@ def resolve_backend(backend="auto"):
     if backend == "torch" and not _torch_available():
         raise RuntimeError(
             "torch backend requested but torch is not importable; "
-            "install with the [torch] extra: pip install portable-qec[torch]")
+            "install with the [torch] extra: pip install tridec[torch]")
     if backend == "triton" and not _triton_gpu_available():
         raise RuntimeError(
             "triton backend requested but triton + a CUDA/ROCm GPU are not "
@@ -133,7 +133,7 @@ def _dense_uint8(M):
 class BpDecoder:
     """Normalized min-sum BP over the numpy / torch / triton backends.
 
-    Construct via ``portable_qec.from_dem`` / ``portable_qec.from_matrices``
+    Construct via ``tridec.from_dem`` / ``tridec.from_matrices``
     (or directly). ``decode_batch(dets)`` returns predicted observables
     (bool[shots, n_obs]) when an observable map is available (always the case
     via ``from_dem``), else hard error estimates (uint8[shots, n_bits]).
@@ -177,7 +177,7 @@ class BpDecoder:
         self.name = f"portable-bp[{self.backend}]"
         self.tie_break = "min_sum_parallel_hard_decision"
         self.config = dict(
-            decoder="portable_qec.BpDecoder", backend=self.backend,
+            decoder="tridec.BpDecoder", backend=self.backend,
             bp_method="minimum_sum", ms_scaling_factor=self.ms_scaling_factor,
             max_iter=self.max_iter, schedule="parallel")
 
@@ -239,7 +239,7 @@ class RelayBpDecoder:
                 f"Relay-BP is implemented on the triton backend only (resolved "
                 f"backend: {resolved!r}). There is no in-package CPU Relay-BP; "
                 f"for a CPU reference use the relay-bp adapter "
-                f"(portable_qec.adapters.make_relay_bp, [decoders] extra).")
+                f"(tridec.adapters.make_relay_bp, [decoders] extra).")
         self.backend = "triton"
         self.device = _default_device("triton", device)
         self.dem = dem
@@ -262,7 +262,7 @@ class RelayBpDecoder:
         self.name = "portable-relay-bp[triton]"
         self.tie_break = "relay_bp_nconv_disjoint_ensemble"
         self.config = dict(
-            decoder="portable_qec.RelayBpDecoder", backend="triton",
+            decoder="tridec.RelayBpDecoder", backend="triton",
             dtype=dtype, **cfg)
 
     @classmethod

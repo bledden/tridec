@@ -27,8 +27,8 @@ from conftest import (BB_CELLS, bb_dem_path, load_bb_circuit, load_bb_dem,
                       load_dem_manifest, load_zoo_grid, on_receipt_platform,
                       zoo_cell)
 
-from portable_qec.dem import extract
-from portable_qec.validation import dem_hash
+from tridec.dem import extract
+from tridec.validation import dem_hash
 
 _FLOAT = re.compile(r"error\(([0-9.eE+-]+)\)")
 

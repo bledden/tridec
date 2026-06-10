@@ -4,8 +4,8 @@ import pytest
 
 from conftest import load_bb_circuit, load_surface_circuit
 
-import portable_qec
-from portable_qec.validation import (
+import tridec
+from tridec.validation import (
     bh_fdr,
     dem_hash,
     gap_to_mle_bootstrap,
@@ -70,7 +70,7 @@ def test_run_matched_g2_rejects_undeclared_tie_break():
 def test_run_matched_manifest_schema_and_determinism():
     surface = load_surface_circuit()
     dem = surface.detector_error_model(decompose_errors=False)
-    dec = portable_qec.from_dem(dem, backend="numpy")
+    dec = tridec.from_dem(dem, backend="numpy")
     m1 = run_matched(surface, [dec], shots=200, rounds=3, seed=0)
     m2 = run_matched(surface, [dec], shots=200, rounds=3, seed=0)
     assert m1["dem_hash"] == dem_hash(dem)
@@ -87,7 +87,7 @@ def test_run_matched_manifest_schema_and_determinism():
 def test_run_matched_keep_per_shot():
     surface = load_surface_circuit()
     dem = surface.detector_error_model(decompose_errors=False)
-    dec = portable_qec.from_dem(dem, backend="numpy")
+    dec = tridec.from_dem(dem, backend="numpy")
     m = run_matched(surface, [dec], shots=100, rounds=3, seed=0,
                     keep_per_shot=True)
     rec = m["decoders"][0]

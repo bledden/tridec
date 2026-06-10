@@ -1,4 +1,4 @@
-# Benchmark report — portable-qec v0.1.0-dev
+# Benchmark report — tridec v0.1.0-dev
 
 Status: skeleton with the carried validation receipts wired in. Sections
 marked **TODO** are planned for the first tagged release; every number below
@@ -36,7 +36,7 @@ check degree 13/20, bit degree 2/3. A rotated surface-code fixture
 
 **Matched protocol.** Every comparison decodes ONE shared DEM
 (`decompose_errors=False`) and ONE sampled shot set (fixed seed) — the
-`run_matched` harness in `portable_qec.validation` enforces this with
+`run_matched` harness in `tridec.validation` enforces this with
 fail-fast gates: G1 (every decoder's DEM hashes to the same sha256) and G2
 (every decoder pre-declares a deterministic tie-break). Per-cell DEM sha256s
 are pinned in `zoo_grid.json` and re-verified by this package's test suite.
@@ -123,7 +123,7 @@ ours matches the `relay-bp` oracle's lowest-weight-over-nconv=5 selection.
 The two columns are therefore *different operating points*, not a
 parameter-matched kernel duel.
 
-| | CUDA-Q QEC 0.6 | portable-qec Triton (fp32) | relay-bp Rust (CPU) |
+| | CUDA-Q QEC 0.6 | tridec Triton (fp32) | relay-bp Rust (CPU) |
 |---|---|---|---|
 | LER (n=2000) | 0.031 (62 fails; 0.0295 w/ OSD) | 0.016 (32 fails) | 0.0155 (31 fails) |
 | Throughput @ batch 2000 | 113,585 shots/s | 2,112 shots/s | 606 shots/s |
@@ -195,7 +195,7 @@ generating circuit.
 ## 6. Reproduction
 
 ```bash
-git clone <repo> && cd portable-qec
+git clone <repo> && cd tridec
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[decoders,dev]" "stim==1.15.0" "ldpc==2.4.1"
 pytest tests/                      # CPU: all gates; GPU tests skip cleanly

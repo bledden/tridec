@@ -17,7 +17,7 @@ def surface():
 def test_adapters_module_imports_without_optional_deps():
     """The adapters module itself must import even if ldpc/relay-bp are absent
     (the factories are guarded, not the module)."""
-    import portable_qec.adapters as ad
+    import tridec.adapters as ad
     assert callable(ad.build_decoders)
     assert isinstance(ad.relay_bp_available(), bool)
     assert isinstance(ad.ldpc_available(), bool)
@@ -25,7 +25,7 @@ def test_adapters_module_imports_without_optional_deps():
 
 def test_ldpc_adapters_decode_and_carry_provenance(surface):
     pytest.importorskip("ldpc")
-    from portable_qec.adapters import make_bp, make_bposd0, make_bposd10
+    from tridec.adapters import make_bp, make_bposd0, make_bposd10
     dem, dets, obs = surface
     for make in (make_bp, make_bposd0, make_bposd10):
         a = make(dem)
@@ -38,7 +38,7 @@ def test_ldpc_adapters_decode_and_carry_provenance(surface):
 
 def test_bposd10_beats_chance_on_surface(surface):
     pytest.importorskip("ldpc")
-    from portable_qec.adapters import make_bposd10
+    from tridec.adapters import make_bposd10
     dem, dets, obs = surface
     pred = make_bposd10(dem).decode_batch(dets)
     ler = float(np.any(pred != obs, axis=1).mean())
@@ -47,7 +47,7 @@ def test_bposd10_beats_chance_on_surface(surface):
 
 def test_build_decoders_core_selection(surface):
     pytest.importorskip("ldpc")
-    from portable_qec.adapters import build_decoders
+    from tridec.adapters import build_decoders
     dem, _, _ = surface
     decs = build_decoders(dem, which=("BP", "BPOSD-10"))
     assert [d.name for d in decs] == ["BP", "BPOSD-10"]
@@ -56,7 +56,7 @@ def test_build_decoders_core_selection(surface):
 
 
 def test_relay_bp_adapter(surface):
-    from portable_qec.adapters import make_relay_bp, relay_bp_available
+    from tridec.adapters import make_relay_bp, relay_bp_available
     if not relay_bp_available():
         pytest.skip("relay-bp[stim] not installed")
     dem, dets, obs = surface

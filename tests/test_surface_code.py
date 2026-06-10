@@ -11,7 +11,7 @@ import pytest
 
 from conftest import load_surface_circuit
 
-import portable_qec
+import tridec
 
 SHOTS = 2000
 
@@ -27,7 +27,7 @@ def surface_shots():
 def test_bp_decodes_surface_code(surface_shots):
     circ, dets, obs = surface_shots
     dem = circ.detector_error_model(decompose_errors=False)
-    dec = portable_qec.from_dem(dem, backend="numpy")
+    dec = tridec.from_dem(dem, backend="numpy")
     pred = dec.decode_batch(dets)
     fails = int(np.any(pred != obs, axis=1).sum())
     ler = fails / SHOTS
@@ -45,7 +45,7 @@ def test_bp_ler_sane_vs_pymatching(surface_shots):
     fails_mwpm = int(np.any(pred_mwpm.astype(bool) != obs, axis=1).sum())
 
     dem = circ.detector_error_model(decompose_errors=False)
-    dec = portable_qec.from_dem(dem, backend="numpy")
+    dec = tridec.from_dem(dem, backend="numpy")
     pred_bp = dec.decode_batch(dets)
     fails_bp = int(np.any(pred_bp != obs, axis=1).sum())
 

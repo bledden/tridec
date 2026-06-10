@@ -1,4 +1,4 @@
-"""portable-qec: vendor-portable GPU decoders for quantum LDPC codes.
+"""tridec: vendor-portable GPU decoders for quantum LDPC codes.
 
 Triton min-sum BP and Relay-BP decoders that consume any stim
 DetectorErrorModel or raw parity-check matrices, with CPU reference
@@ -7,11 +7,11 @@ relay-bp), running on NVIDIA (CUDA) and AMD (ROCm) GPUs.
 
 Quickstart::
 
-    import stim, portable_qec
+    import stim, tridec
 
     circuit = stim.Circuit.from_file("memory.stim")
     dem = circuit.detector_error_model(decompose_errors=False)
-    decoder = portable_qec.from_dem(dem, backend="auto")
+    decoder = tridec.from_dem(dem, backend="auto")
 
     dets, obs = circuit.compile_detector_sampler(seed=0).sample(
         10_000, separate_observables=True)

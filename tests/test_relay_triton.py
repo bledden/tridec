@@ -18,7 +18,7 @@ relay_bp = pytest.importorskip("relay_bp")
 
 from conftest import load_bb_circuit
 
-from portable_qec.backends.relay_triton import RelayBpTriton
+from tridec.backends.relay_triton import RelayBpTriton
 
 DEVICE = "cuda"
 BB_SHOTS = 2000

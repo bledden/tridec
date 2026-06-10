@@ -35,8 +35,8 @@ import stim
 from conftest import (load_bb_circuit, load_zoo_grid, on_receipt_platform,
                       zoo_cell)
 
-import portable_qec
-from portable_qec.validation import run_matched, wilson_ci
+import tridec
+from tridec.validation import run_matched, wilson_ci
 
 pytest.importorskip("ldpc")
 
@@ -63,14 +63,14 @@ def gate_run():
     cell = zoo_cell(grid, P, BASIS)
     exact = not _receipt_env_mismatches(grid["env"])
 
-    from portable_qec.adapters import make_bp, make_bposd10
+    from tridec.adapters import make_bp, make_bposd10
 
     circuit = load_bb_circuit(P, BASIS)
     dem = circuit.detector_error_model(decompose_errors=False)
     decoders = [
         make_bposd10(dem),
         make_bp(dem),
-        portable_qec.from_dem(dem, backend="numpy"),
+        tridec.from_dem(dem, backend="numpy"),
     ]
     manifest = run_matched(circuit, decoders, shots=cell["shots"],
                            rounds=cell["rounds"], seed=cell["seed"],

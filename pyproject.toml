@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "portable-qec"
+name = "tridec"
 version = "0.1.0.dev0"
 description = "Vendor-portable GPU decoders for quantum LDPC codes: Triton min-sum BP and Relay-BP on NVIDIA (CUDA) and AMD (ROCm), with CPU reference implementations, consuming any stim DetectorErrorModel or raw parity-check matrices."
 readme = "README.md"
