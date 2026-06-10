@@ -54,3 +54,22 @@ def test_bp_ler_sane_vs_pymatching(surface_shots):
     # Sanity, not parity: plain BP may trail MWPM but must be the same order.
     assert fails_bp <= 10 * max(fails_mwpm, 1) + 5, (
         f"BP ({fails_bp}) implausibly worse than MWPM ({fails_mwpm})")
+
+
+def test_surface_cpu_receipt_is_consistent():
+    """The carried surface_cpu.json receipt parses and is internally
+    consistent (ler == fails/shots, Wilson CI brackets the point estimate,
+    and the honest BP-vs-MWPM ordering it documents actually holds)."""
+    import json
+    from conftest import RECEIPTS_DIR
+    rec = json.loads((RECEIPTS_DIR / "surface_cpu.json").read_text())
+    assert len(rec["cells"]) >= 3
+    for c in rec["cells"]:
+        n = c["shots"]
+        for k in ("tridec_bp", "pymatching_mwpm"):
+            r = c[k]
+            assert r["ler"] == pytest.approx(r["fails"] / n)
+            lo, hi = r["ler_wilson95"]
+            assert lo <= r["ler"] <= hi
+        # The documented landscape: BP-without-postprocessing loses to MWPM.
+        assert c["tridec_bp"]["fails"] > c["pymatching_mwpm"]["fails"]

@@ -1,0 +1,246 @@
+{
+ "meta": {
+  "what": "surface-code memory LER receipts on CPU: tridec min-sum BP (no post-processing) vs PyMatching MWPM. Second code family after the BB-code grid.",
+  "honest_reading": "Plain BP without post-processing is EXPECTED to lose to matching on surface codes (degenerate loops split BP's beliefs) and the gap widens with distance. The claim is code-agnostic operation with measured numbers, not beating matching.",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "darwin",
+   "machine": "arm64",
+   "python": "3.12.12"
+  },
+  "versions": {
+   "stim": "1.15.0",
+   "pymatching": "2.3.1",
+   "torch": "2.12.0",
+   "numpy": "2.2.6",
+   "tridec": "0.1.0.dev0"
+  },
+  "protocol": "one sampled shot set per cell (seed recorded); BP decodes the raw DEM, MWPM the decomposed DEM, same shots; BP main numbers torch CPU fp64 (chunked batch, perf_counter), numpy reference cross-checked on the first 2000 shots per cell."
+ },
+ "cells": [
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.003,
+   "circuit": "surface_code:rotated_memory_z (stim generated; all four noise parameters = p)",
+   "shots": 50000,
+   "seed": 20260610,
+   "dem": {
+    "n_det": 24,
+    "n_obs": 1,
+    "n_err": 219,
+    "dem_hash_raw_local": "f3f1a66c56c23d9970f6d9828aeafef82a8f2dfc8385806dd8bf8875d95b0771",
+    "dem_hash_note": "sha256 of the locally-built raw DEM; platform-local (see benchmark.md \u00a75.1)"
+   },
+   "tridec_bp": {
+    "backend": "torch",
+    "device": "cpu",
+    "dtype": "float64",
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "torch",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "dem": "decompose_errors=False",
+    "fails": 1966,
+    "ler": 0.03932,
+    "ler_wilson95": [
+     0.0376514917750927,
+     0.041059292717913136
+    ],
+    "decode_s": 3.807363041996723,
+    "shots_per_s": 13132.448744309431
+   },
+   "pymatching_mwpm": {
+    "dem": "decompose_errors=True",
+    "fails": 321,
+    "ler": 0.00642,
+    "ler_wilson95": [
+     0.005756852807888175,
+     0.0071589868423198215
+    ],
+    "decode_s": 0.004895208985544741,
+    "shots_per_s": 10214068.520393511
+   },
+   "numpy_crosscheck": {
+    "shots": 2000,
+    "per_shot_prediction_agreement_vs_torch": 1.0,
+    "fails_numpy": 74,
+    "fails_torch_same_subset": 74,
+    "decode_s": 1.4472693749994505
+   },
+   "ler_ratio_bp_over_mwpm": 6.1246105919003115
+  },
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.005,
+   "circuit": "surface_code:rotated_memory_z (stim generated; all four noise parameters = p)",
+   "shots": 50000,
+   "seed": 20260610,
+   "dem": {
+    "n_det": 24,
+    "n_obs": 1,
+    "n_err": 219,
+    "dem_hash_raw_local": "99726600398373c330db15dabe7e33c42faa597f3771a1a1c9a0b9b2a73a666a",
+    "dem_hash_note": "sha256 of the locally-built raw DEM; platform-local (see benchmark.md \u00a75.1)"
+   },
+   "tridec_bp": {
+    "backend": "torch",
+    "device": "cpu",
+    "dtype": "float64",
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "torch",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "dem": "decompose_errors=False",
+    "fails": 3725,
+    "ler": 0.0745,
+    "ler_wilson95": [
+     0.07223090567314609,
+     0.07683447333565391
+    ],
+    "decode_s": 3.72143670800142,
+    "shots_per_s": 13435.671199914686
+   },
+   "pymatching_mwpm": {
+    "dem": "decompose_errors=True",
+    "fails": 841,
+    "ler": 0.01682,
+    "ler_wilson95": [
+     0.015729354077103914,
+     0.0179848875902803
+    ],
+    "decode_s": 0.008563207986298949,
+    "shots_per_s": 5838933.268933737
+   },
+   "numpy_crosscheck": {
+    "shots": 2000,
+    "per_shot_prediction_agreement_vs_torch": 1.0,
+    "fails_numpy": 147,
+    "fails_torch_same_subset": 147,
+    "decode_s": 1.479126374993939
+   },
+   "ler_ratio_bp_over_mwpm": 4.429250891795482
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.003,
+   "circuit": "surface_code:rotated_memory_z (stim generated; all four noise parameters = p)",
+   "shots": 50000,
+   "seed": 20260610,
+   "dem": {
+    "n_det": 120,
+    "n_obs": 1,
+    "n_err": 1677,
+    "dem_hash_raw_local": "b7a5f359a66a0cf39aaebe2ae9a73f2dc0487b76fc9b77e3eecc3c339ba897df",
+    "dem_hash_note": "sha256 of the locally-built raw DEM; platform-local (see benchmark.md \u00a75.1)"
+   },
+   "tridec_bp": {
+    "backend": "torch",
+    "device": "cpu",
+    "dtype": "float64",
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "torch",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "dem": "decompose_errors=False",
+    "fails": 4340,
+    "ler": 0.0868,
+    "ler_wilson95": [
+     0.08436381287778935,
+     0.08929967620901713
+    ],
+    "decode_s": 34.67278316701413,
+    "shots_per_s": 1442.0532600211736
+   },
+   "pymatching_mwpm": {
+    "dem": "decompose_errors=True",
+    "fails": 173,
+    "ler": 0.00346,
+    "ler_wilson95": [
+     0.0029820524943531155,
+     0.0040142419663508795
+    ],
+    "decode_s": 0.03893345899996348,
+    "shots_per_s": 1284242.4301433607
+   },
+   "numpy_crosscheck": {
+    "shots": 2000,
+    "per_shot_prediction_agreement_vs_torch": 1.0,
+    "fails_numpy": 175,
+    "fails_torch_same_subset": 175,
+    "decode_s": 9.60551208301331
+   },
+   "ler_ratio_bp_over_mwpm": 25.08670520231214
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.005,
+   "circuit": "surface_code:rotated_memory_z (stim generated; all four noise parameters = p)",
+   "shots": 50000,
+   "seed": 20260610,
+   "dem": {
+    "n_det": 120,
+    "n_obs": 1,
+    "n_err": 1677,
+    "dem_hash_raw_local": "a0b31d3e7fc7833fd84a79735fe751a9dc007ee4b48cb6073fe3025bf473c71e",
+    "dem_hash_note": "sha256 of the locally-built raw DEM; platform-local (see benchmark.md \u00a75.1)"
+   },
+   "tridec_bp": {
+    "backend": "torch",
+    "device": "cpu",
+    "dtype": "float64",
+    "config": {
+     "decoder": "tridec.BpDecoder",
+     "backend": "torch",
+     "bp_method": "minimum_sum",
+     "ms_scaling_factor": 0.625,
+     "max_iter": 30,
+     "schedule": "parallel"
+    },
+    "dem": "decompose_errors=False",
+    "fails": 7964,
+    "ler": 0.15928,
+    "ler_wilson95": [
+     0.15609861343935288,
+     0.16251373893638943
+    ],
+    "decode_s": 34.42408312499174,
+    "shots_per_s": 1452.4715100894064
+   },
+   "pymatching_mwpm": {
+    "dem": "decompose_errors=True",
+    "fails": 699,
+    "ler": 0.01398,
+    "ler_wilson95": [
+     0.012987577824467402,
+     0.015047100215149456
+    ],
+    "decode_s": 0.07570583300548606,
+    "shots_per_s": 660451.0909532787
+   },
+   "numpy_crosscheck": {
+    "shots": 2000,
+    "per_shot_prediction_agreement_vs_torch": 1.0,
+    "fails_numpy": 304,
+    "fails_torch_same_subset": 304,
+    "decode_s": 9.271050749986898
+   },
+   "ler_ratio_bp_over_mwpm": 11.393419170243204
+  }
+ ]
+}
