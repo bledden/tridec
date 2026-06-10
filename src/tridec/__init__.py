@@ -28,7 +28,12 @@ from .api import (
 )
 from .dem import extract
 
-__version__ = "0.1.0.dev0"
+# Single-sourced from the installed distribution metadata (pyproject.toml).
+try:
+    from importlib.metadata import version as _dist_version
+    __version__ = _dist_version("tridec")
+except Exception:  # pragma: no cover - uninstalled source tree
+    __version__ = "0.1.0"
 
 __all__ = [
     "BpDecoder",
