@@ -52,3 +52,11 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+# Environment markers: the suite runs on three kinds of machines —
+#   CPU-only      : gpu + metal tests skip (importorskip / module-level skips)
+#   CUDA/ROCm GPU : gpu tests run, metal tests skip
+#   Apple silicon + triton-metal : metal tests run, gpu tests skip
+markers = [
+    "gpu: requires triton + a CUDA/ROCm GPU",
+    "metal: requires the experimental triton-metal environment (Apple silicon)",
+]

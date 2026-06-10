@@ -1,0 +1,210 @@
+{
+ "meta": {
+  "STATUS": "PRELIMINARY / EXPERIMENTAL \u2014 fp32 Metal (triton-metal), one machine, small shot counts. NOT official Relay-BP surface receipts; official numbers are deferred to the Phase-3 CUDA/ROCm session (docs/benchmark.md TODO).",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "darwin",
+   "machine": "arm64",
+   "python": "3.14.4"
+  },
+  "versions": {
+   "stim": "1.15.0",
+   "pymatching": "2.3.1",
+   "torch": "2.9.1",
+   "triton": "3.7.0",
+   "numpy": "2.2.6",
+   "tridec": "0.1.0.dev0"
+  },
+  "protocol": "one shot set per cell (seed recorded); relay + BP on the raw DEM via backend='metal' (fp32, CPU tensors), MWPM on the decomposed DEM, same shots. Relay config = validated defaults (relay_bp oracle configuration)."
+ },
+ "cells": [
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.003,
+   "shots": 2000,
+   "seed": 20260610,
+   "relay_metal_fp32_PRELIMINARY": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "metal",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 12,
+    "ler": 0.006,
+    "ler_wilson95": [
+     0.0034355600294584893,
+     0.010458552159848292
+    ],
+    "decode_s": 7.968088958004955
+   },
+   "bp_metal_fp32": {
+    "fails": 90,
+    "ler": 0.045,
+    "ler_wilson95": [
+     0.036753680274317455,
+     0.05499089674214932
+    ]
+   },
+   "pymatching_mwpm": {
+    "fails": 7,
+    "ler": 0.0035,
+    "ler_wilson95": [
+     0.0016964100455623197,
+     0.007207287731747025
+    ]
+   }
+  },
+  {
+   "d": 3,
+   "rounds": 3,
+   "p": 0.005,
+   "shots": 2000,
+   "seed": 20260610,
+   "relay_metal_fp32_PRELIMINARY": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "metal",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 37,
+    "ler": 0.0185,
+    "ler_wilson95": [
+     0.013451271532792346,
+     0.025394912716501614
+    ],
+    "decode_s": 7.801771458995063
+   },
+   "bp_metal_fp32": {
+    "fails": 164,
+    "ler": 0.082,
+    "ler_wilson95": [
+     0.07076162448793859,
+     0.09484108582609024
+    ]
+   },
+   "pymatching_mwpm": {
+    "fails": 33,
+    "ler": 0.0165,
+    "ler_wilson95": [
+     0.011772751122175861,
+     0.02308110159752015
+    ]
+   }
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.003,
+   "shots": 2000,
+   "seed": 20260610,
+   "relay_metal_fp32_PRELIMINARY": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "metal",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 33,
+    "ler": 0.0165,
+    "ler_wilson95": [
+     0.011772751122175861,
+     0.02308110159752015
+    ],
+    "decode_s": 56.826813833991764
+   },
+   "bp_metal_fp32": {
+    "fails": 154,
+    "ler": 0.077,
+    "ler_wilson95": [
+     0.06611012496670547,
+     0.08951175652332848
+    ]
+   },
+   "pymatching_mwpm": {
+    "fails": 4,
+    "ler": 0.002,
+    "ler_wilson95": [
+     0.0007780147254709095,
+     0.005131434404639974
+    ]
+   }
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "p": 0.005,
+   "shots": 2000,
+   "seed": 20260610,
+   "relay_metal_fp32_PRELIMINARY": {
+    "config": {
+     "decoder": "tridec.RelayBpDecoder",
+     "backend": "metal",
+     "dtype": "float32",
+     "gamma0": 0.1,
+     "pre_iter": 80,
+     "num_sets": 60,
+     "set_max_iter": 60,
+     "gamma_dist_interval": [
+      -0.24,
+      0.66
+     ],
+     "stop_nconv": 5,
+     "stopping_criterion": "nconv"
+    },
+    "fails": 98,
+    "ler": 0.049,
+    "ler_wilson95": [
+     0.040373396150675284,
+     0.0593558439249874
+    ],
+    "decode_s": 32.77937704100623
+   },
+   "bp_metal_fp32": {
+    "fails": 332,
+    "ler": 0.166,
+    "ler_wilson95": [
+     0.150336224684911,
+     0.18294440987223168
+    ]
+   },
+   "pymatching_mwpm": {
+    "fails": 25,
+    "ler": 0.0125,
+    "ler_wilson95": [
+     0.008481021586816417,
+     0.018388168073683698
+    ]
+   }
+  }
+ ]
+}

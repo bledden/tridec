@@ -9,6 +9,8 @@ see bench/receipts/).
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.gpu
+
 triton = pytest.importorskip("triton")
 torch = pytest.importorskip("torch")
 if not torch.cuda.is_available():

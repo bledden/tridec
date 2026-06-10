@@ -25,6 +25,19 @@ def _triton_gpu_available():
         return False
 
 
+def _metal_available():
+    import sys
+    if sys.platform != "darwin":
+        return False
+    try:
+        import triton  # noqa: F401
+        import triton_metal  # noqa: F401
+        import torch
+        return not torch.cuda.is_available()
+    except Exception:
+        return False
+
+
 @pytest.fixture(scope="module")
 def surface():
     circ = load_surface_circuit()
@@ -41,6 +54,8 @@ def test_resolve_backend_auto_matches_environment():
     resolved = resolve_backend("auto")
     if _triton_gpu_available():
         assert resolved == "triton"
+    elif _metal_available():
+        assert resolved == "metal"
     elif _torch_available():
         assert resolved == "torch"
     else:
@@ -50,17 +65,27 @@ def test_resolve_backend_auto_matches_environment():
 def test_available_backends_always_includes_numpy():
     avail = available_backends()
     assert "numpy" in avail
-    assert set(avail) <= {"numpy", "torch", "triton"}
+    assert set(avail) <= {"numpy", "torch", "triton", "metal"}
 
 
 def test_unknown_backend_raises():
     with pytest.raises(ValueError, match="backend"):
+        resolve_backend("vulkan")
+
+
+def test_metal_backend_unavailable_raises_clear_error():
+    if _metal_available():
+        pytest.skip("triton-metal available here; the unavailable path is moot")
+    with pytest.raises(RuntimeError, match="triton-metal"):
         resolve_backend("metal")
 
 
 def test_triton_backend_unavailable_raises_clear_error(surface):
     if _triton_gpu_available():
         pytest.skip("triton+GPU available here; the unavailable path is moot")
+    if _metal_available():
+        pytest.skip("metal env: backend='triton' resolves to metal (tested "
+                    "in test_metal.py)")
     dem, _, _ = surface
     with pytest.raises((RuntimeError, ImportError), match="[Tt]riton|GPU"):
         tridec.from_dem(dem, backend="triton")
@@ -83,7 +108,7 @@ def test_from_dem_numpy_decodes(surface):
 def test_from_dem_auto_backend(surface):
     dem, dets, _ = surface
     dec = tridec.from_dem(dem)  # backend="auto"
-    assert dec.backend in ("numpy", "torch", "triton")
+    assert dec.backend in ("numpy", "torch", "triton", "metal")
     pred = dec.decode_batch(dets[:32])
     assert pred.shape == (32, dem.num_observables)
 
@@ -116,6 +141,8 @@ def test_relay_requires_triton_backend(surface):
         dec = tridec.from_dem(dem, algorithm="relay")
         assert isinstance(dec, RelayBpDecoder)
         assert dec.backend == "triton"
+    elif _metal_available():
+        pytest.skip("metal env: relay-on-metal covered in test_metal.py")
     else:
         with pytest.raises((RuntimeError, NotImplementedError)):
             tridec.from_dem(dem, algorithm="relay", backend="numpy")

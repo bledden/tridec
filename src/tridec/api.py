@@ -10,28 +10,39 @@ Backends
                    triton + a CUDA or ROCm GPU. fp32 messages on the BP path
                    (>=99.5% hard-decision agreement vs the fp64 references,
                    LER-validated on H200 and MI300X — see bench/receipts/).
-  * ``"auto"``   — triton if importable AND a GPU is visible, else torch if
-                   importable, else numpy.
+                   In the triton-metal environment (no CUDA/ROCm), a
+                   ``"triton"`` request resolves to ``"metal"``.
+  * ``"metal"``  — EXPERIMENTAL: the same Triton kernels on Apple silicon via
+                   triton-metal (darwin + triton + triton_metal importable, no
+                   CUDA/ROCm device). Execution pattern is CPU torch tensors
+                   (zero-copy UMA — not mps); fp32 only (Metal has no fp64).
+                   Spike-validated on M4 Max — see bench/receipts/metal_spike.md.
+  * ``"auto"``   — triton if importable AND a CUDA/ROCm GPU is visible, else
+                   metal if the triton-metal environment is detected, else
+                   torch if importable, else numpy.
 
 Algorithms per backend (honest availability matrix):
 
-  ===========  =======  =======  ========
-  algorithm     numpy    torch    triton
-  ===========  =======  =======  ========
-  bp (min-sum)   yes      yes      yes
-  relay          no       no       yes
-  ===========  =======  =======  ========
+  ===========  =======  =======  ========  ==============
+  algorithm     numpy    torch    triton    metal (exp.)
+  ===========  =======  =======  ========  ==============
+  bp (min-sum)   yes      yes      yes       yes (fp32)
+  relay          no       no       yes       yes (fp32)
+  ===========  =======  =======  ========  ==============
 
 Relay-BP has no in-package CPU implementation; its CPU reference is IBM's
 ``relay-bp`` Rust decoder, available through ``tridec.adapters`` (the
 ``decoders`` extra) and used as the validation oracle for the Triton path.
 """
+import sys
+import warnings
+
 import numpy as np
 import scipy.sparse as sp
 
 from .dem import extract
 
-_BACKENDS = ("auto", "numpy", "torch", "triton")
+_BACKENDS = ("auto", "numpy", "torch", "triton", "metal")
 
 # Validated defaults (the configuration the carried receipts were measured at).
 _BP_DEFAULTS = dict(max_iter=30, ms_scaling_factor=0.625)
@@ -66,11 +77,28 @@ def _triton_gpu_available():
         return False
 
 
+def _metal_available():
+    """The EXPERIMENTAL triton-metal environment: darwin, triton AND
+    triton_metal importable, torch present, and no CUDA/ROCm device visible.
+    Execution pattern is CPU torch tensors (zero-copy UMA — not mps)."""
+    if sys.platform != "darwin":
+        return False
+    try:
+        import triton  # noqa: F401
+        import triton_metal  # noqa: F401
+        import torch
+        return not torch.cuda.is_available()
+    except Exception:
+        return False
+
+
 def available_backends():
     """The backends usable in THIS environment, best first."""
     out = []
     if _triton_gpu_available():
         out.append("triton")
+    if _metal_available():
+        out.append("metal")
     if _torch_available():
         out.append("torch")
     out.append("numpy")
@@ -81,8 +109,11 @@ def resolve_backend(backend="auto"):
     """Resolve a backend request to a concrete backend name.
 
     ``"auto"`` -> triton if importable AND a GPU (CUDA or ROCm) is visible,
-    else torch if importable, else numpy. Explicitly requesting an unavailable
-    backend raises RuntimeError with the reason.
+    else metal if the triton-metal environment is detected (experimental),
+    else torch if importable, else numpy. A ``"triton"`` request in the
+    triton-metal environment resolves to ``"metal"`` (the same kernels, CPU
+    tensors). Explicitly requesting an unavailable backend raises
+    RuntimeError with the reason.
     """
     if backend not in _BACKENDS:
         raise ValueError(
@@ -90,6 +121,8 @@ def resolve_backend(backend="auto"):
     if backend == "auto":
         if _triton_gpu_available():
             return "triton"
+        if _metal_available():
+            return "metal"
         if _torch_available():
             return "torch"
         return "numpy"
@@ -98,11 +131,34 @@ def resolve_backend(backend="auto"):
             "torch backend requested but torch is not importable; "
             "install with the [torch] extra: pip install tridec[torch]")
     if backend == "triton" and not _triton_gpu_available():
+        if _metal_available():
+            return "metal"
         raise RuntimeError(
             "triton backend requested but triton + a CUDA/ROCm GPU are not "
             "available (triton importable: requires the [gpu] extra; GPU "
-            "visible: torch.cuda.is_available() must be True)")
+            "visible: torch.cuda.is_available() must be True). On Apple "
+            "silicon, the experimental metal backend requires triton-metal "
+            "— see README 'Experimental: Apple silicon (Metal)'.")
+    if backend == "metal" and not _metal_available():
+        raise RuntimeError(
+            "metal backend requested but the triton-metal environment is not "
+            "available (requires darwin + triton + triton-metal installed and "
+            "no CUDA/ROCm device) — see README 'Experimental: Apple silicon "
+            "(Metal)' for the install recipe.")
     return backend
+
+
+_warned_metal = False
+
+
+def _warn_metal_once():
+    global _warned_metal
+    if not _warned_metal:
+        _warned_metal = True
+        warnings.warn(
+            "tridec metal backend is EXPERIMENTAL (triton-metal, fp32, CPU "
+            "torch tensors); validated at spike level only — see "
+            "bench/receipts/metal_spike.md", UserWarning, stacklevel=3)
 
 
 def _default_device(backend, device):
@@ -110,6 +166,9 @@ def _default_device(backend, device):
         return device
     if backend == "triton":
         return "cuda"
+    if backend == "metal":
+        # triton-metal documented pattern: CPU tensors (zero-copy UMA), NOT mps.
+        return "cpu"
     if backend == "torch":
         try:
             import torch
@@ -157,7 +216,9 @@ class BpDecoder:
             from .backends.bp_torch import BpGpu
             self._impl = BpGpu(H, priors, max_iter=max_iter,
                                ms_scaling_factor=ms_scaling_factor)
-        else:  # triton
+        else:  # triton kernels: "triton" (CUDA/ROCm) or "metal" (triton-metal)
+            if self.backend == "metal":
+                _warn_metal_once()
             from .backends.bp_triton import BpTriton
             self._impl = BpTriton(H, priors, max_iter=max_iter,
                                   ms_scaling_factor=ms_scaling_factor,
@@ -222,26 +283,43 @@ class BpDecoder:
 
 
 class RelayBpDecoder:
-    """Relay-BP (disordered-memory min-sum relay ensemble), Triton backend only.
+    """Relay-BP (disordered-memory min-sum relay ensemble), Triton kernels only
+    (backend ``"triton"`` on CUDA/ROCm, or the experimental ``"metal"``).
 
     Defaults match the ``relay_bp`` Rust oracle configuration the kernels were
     LER-validated against (gamma0=0.1, pre_iter=80, num_sets=60,
     set_max_iter=60, gamma_dist_interval=(-0.24, 0.66), stop_nconv=5).
+
+    Message precision: ``dtype=None`` (default) resolves to fp64 on CUDA/ROCm
+    (matches the relay_bp F64 oracle) and fp32 on metal — Metal has no fp64,
+    so requesting ``dtype="float64"`` there raises.
     """
 
     algorithm = "relay"
 
     def __init__(self, H, priors, observables=None, backend="auto", device=None,
-                 block_s=256, dtype="float64", dem=None, **relay_params):
+                 block_s=256, dtype=None, dem=None, **relay_params):
         resolved = resolve_backend(backend)
-        if resolved != "triton":
+        if resolved not in ("triton", "metal"):
             raise NotImplementedError(
-                f"Relay-BP is implemented on the triton backend only (resolved "
-                f"backend: {resolved!r}). There is no in-package CPU Relay-BP; "
+                f"Relay-BP is implemented on the triton kernels only (resolved "
+                f"backend: {resolved!r}; needs 'triton' on CUDA/ROCm or the "
+                f"experimental 'metal'). There is no in-package CPU Relay-BP; "
                 f"for a CPU reference use the relay-bp adapter "
                 f"(tridec.adapters.make_relay_bp, [decoders] extra).")
-        self.backend = "triton"
-        self.device = _default_device("triton", device)
+        if resolved == "metal":
+            if dtype is None:
+                dtype = "float32"
+            elif str(dtype) == "float64":
+                raise ValueError(
+                    "Relay-BP on the metal backend requires dtype='float32': "
+                    "Metal has no fp64 — fp64 messages cannot run on Apple "
+                    "GPUs (the fp64 oracle-precision path needs CUDA/ROCm).")
+            _warn_metal_once()
+        elif dtype is None:
+            dtype = "float64"
+        self.backend = resolved
+        self.device = _default_device(resolved, device)
         self.dem = dem
 
         cfg = dict(_RELAY_DEFAULTS)
@@ -259,10 +337,10 @@ class RelayBpDecoder:
         self.n_bits = self._impl.n_bits
         self.n_checks = self._impl.n_checks
 
-        self.name = "portable-relay-bp[triton]"
+        self.name = f"portable-relay-bp[{self.backend}]"
         self.tie_break = "relay_bp_nconv_disjoint_ensemble"
         self.config = dict(
-            decoder="tridec.RelayBpDecoder", backend="triton",
+            decoder="tridec.RelayBpDecoder", backend=self.backend,
             dtype=dtype, **cfg)
 
     @classmethod
@@ -298,9 +376,11 @@ def from_dem(dem, backend="auto", algorithm="bp", device=None, **opts):
     Args:
         dem: the DEM (build with ``decompose_errors=False`` — the decoders
             consume the raw hyperedge mechanism set).
-        backend: "auto" | "numpy" | "torch" | "triton" (see module docstring).
+        backend: "auto" | "numpy" | "torch" | "triton" | "metal"
+            (see module docstring; "metal" is experimental).
         algorithm: "bp" (min-sum BP, all backends) or "relay" (Relay-BP,
-            triton backend only).
+            triton kernels only: "triton" on CUDA/ROCm or experimental
+            "metal").
         device: optional torch device string for the torch/triton backends.
         **opts: decoder hyperparameters (e.g. max_iter, ms_scaling_factor for
             bp; gamma0, pre_iter, num_sets, ... for relay).

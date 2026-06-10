@@ -144,6 +144,24 @@ Throughput context (same cells): torch-CPU batched BP decoded 50k shots in
 GPU session):** official Relay-BP surface-code receipts (triton-only; needs
 the CUDA/ROCm box) and Triton-BP surface throughput.
 
+**PRELIMINARY (experimental Metal, fp32, not official):** while the official
+Relay-BP surface receipts wait for the GPU session, the experimental
+triton-metal path produced a preliminary sample
+(`surface_relay_metal_preliminary.json`; 2000 shots/cell, same protocol/seed,
+fp32, one M4 Max):
+
+| Cell (N=2000) | Relay-BP (metal fp32) | plain BP | PyMatching |
+|---|---|---|---|
+| d=3, p=0.003 | 12 | 90 | 7 |
+| d=3, p=0.005 | 37 | 164 | 33 |
+| d=5, p=0.003 | 33 | 154 | 4 |
+| d=5, p=0.005 | 98 | 332 | 25 |
+
+Preliminary reading: Relay-BP's disordered memory recovers most of the
+plain-BP-vs-matching gap at d=3 (overlapping Wilson CIs vs MWPM), but a real
+gap remains at d=5 in this small fp32 sample (33 vs 4 at p=0.003). Treat as
+directional only until the CUDA/ROCm re-run with proper shot counts.
+
 ## 4. Comparisons
 
 ### 4.1 NVIDIA CUDA-Q QEC 0.6 GPU Relay-BP (H200)
