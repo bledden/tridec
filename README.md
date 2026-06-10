@@ -23,6 +23,10 @@ as an **experimental** backend (see below).
 
 ## Install
 
+Most users want `pip install "tridec[torch,decoders]"` (CPU+GPU torch backend
+plus the reference adapters). The bare install is the **numpy CPU reference
+only** — correct but slow.
+
 ```bash
 pip install tridec                # numpy CPU reference only
 pip install "tridec[torch]"       # + batched torch backend (CPU/GPU)
@@ -150,9 +154,11 @@ shots, fresh instances: 879/880/879) — documented in
 ## Status
 
 `0.1.0` — first release. The kernels and their validation receipts are
-stable; the public API surface is young and may still move before 1.0. GPU
-paths require triton + a CUDA/ROCm GPU (or the experimental triton-metal
-environment); the GPU/metal test tiers skip cleanly where unavailable.
+stable; the public API surface is young and may still move before 1.0.
+Minor `0.x` releases may rename or remove public API; `1.0` will lock the
+surface. GPU paths require triton + a CUDA/ROCm GPU (or the experimental
+triton-metal environment); the GPU/metal test tiers skip cleanly where
+unavailable.
 Validated through the installed package on MI300X/ROCm (v0.1.0) and via
 carried receipts on H200/CUDA; Metal is experimental.
 

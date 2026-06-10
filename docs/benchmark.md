@@ -62,6 +62,12 @@ vendors against the `relay-bp` Rust oracle (F64) on 2000 canonical shots
 (p=0.003, Z, seed 0). Receipts: `bench_relay_triton.json` (H200),
 `bench_relay_mi300x.json` (MI300X).
 
+*Reading note: the table below shows the **carried receipts** — both vendors
+decoding the source-platform shot set, hence identical counts. The
+packaged-API re-validation further down re-samples shots locally on each
+platform (stim's sampler is platform-dependent, §5.1), so its counts (e.g.
+34 vs oracle 31) differ from this table without being inconsistent with it.*
+
 | | NVIDIA H200 (CUDA 12.4, triton 3.0) | AMD MI300X (ROCm 7.0, triton 3.4) |
 |---|---|---|
 | Pre-leg posterior max-diff vs oracle | 1.78e-15 | 1.78e-15 |
