@@ -1,0 +1,83 @@
+# tridec CI — CPU lanes only, honestly.
+#
+# There are NO GPU lanes here: GitHub-hosted runners have no CUDA/ROCm
+# devices, so the Triton kernel tiers (tests/test_bp_triton.py,
+# tests/test_relay_triton.py) skip in CI by design. The GPU paths are
+# validated by the carried receipts in bench/receipts/ (H200 + MI300X) and
+# the experimental Metal tier runs only on a local triton-metal machine.
+# The badge therefore certifies the CPU surface: API, backends (numpy/torch),
+# DEM extraction, validation harness, sinter adapter, and the receipt gates.
+#
+# Tier binding per lane:
+#   * ubuntu lane — statistical tiers bind; the STRICT tiers (exact-count
+#     no-regression vs zoo_grid.json, strict DEM text-hash identity) SKIP,
+#     expected: stim's DEM float computation/rendering and its seeded sampler
+#     are platform-dependent (receipt platform is darwin/arm64 — see
+#     docs/benchmark.md §5.1 and tests/conftest.py). The no-regression test
+#     falls back to its statistical-equivalence tier.
+#   * macos-14 lane (arm64) — pinned to the receipt env (stim==1.15.0,
+#     ldpc==2.4.1, python 3.12): the EXACT-count no-regression tier and the
+#     strict DEM-hash tier BIND here.
+#
+# relay-bp (the Rust CPU oracle adapter) ships no wheels for these lanes
+# (only cp314/manylinux as of 0.2.2), so it builds from sdist with cargo.
+# That build is slow/flaky on CI, so it is installed best-effort
+# (continue-on-error): when it fails, the single relay-bp adapter test skips
+# honestly and everything else still binds.
+
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu:
+    name: ubuntu py${{ matrix.python }} (statistical tiers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install CPU torch (small wheel, no CUDA payload)
+        run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install package + pinned receipt deps
+        run: |
+          python -m pip install -e ".[dev]" "stim==1.15.0" "ldpc==2.4.1"
+      - name: Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python -m pip install "relay-bp[stim]>=0.2.2"
+      - name: Run suite (strict tiers skip off-receipt-platform — expected)
+        run: python -m pytest tests/ -v -ra
+
+  macos-receipt:
+    name: macos-14 arm64 py3.12 (STRICT tiers bind)
+    runs-on: macos-14   # Apple silicon == the receipt platform (darwin/arm64)
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package + EXACT receipt pins (stim 1.15.0, ldpc 2.4.1)
+        run: |
+          python -m pip install torch
+          python -m pip install -e ".[dev]" "stim==1.15.0" "ldpc==2.4.1"
+      - name: Install relay-bp oracle (best-effort: sdist + cargo; skip-safe)
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python -m pip install "relay-bp[stim]>=0.2.2"
+      - name: Run suite (exact-count no-regression + strict DEM-hash BIND here)
+        run: python -m pytest tests/ -v -ra
