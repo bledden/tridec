@@ -42,7 +42,9 @@ torch = ["torch>=2.4"]
 gpu = ["torch>=2.4", "triton>=3.0"]
 # decoders: optional CPU reference decoder adapters (validation targets).
 decoders = ["ldpc>=2.4.1", "relay-bp[stim]>=0.2.2"]
-dev = ["pytest>=8.0"]
+# sinter: the sinter.collect custom-decoder integration (tridec.sinter).
+sinter = ["sinter>=1.15"]
+dev = ["pytest>=8.0", "sinter>=1.15", "pymatching>=2.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
