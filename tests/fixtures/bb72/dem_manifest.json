@@ -1,0 +1,35 @@
+{
+  "purpose": "Canonical DEM fixture files. The .dem FILE BYTES are the canonical, platform-independent decoder-input artifacts; the .stim files are provenance (stim's circuit->DEM float computation differs across platforms at the ~ulp level, and its text rendering differs too, so regenerated DEMs are only tolerance-equal across platforms \u2014 see docs/benchmark.md Reproducibility notes).",
+  "generated_on": {
+    "platform": "darwin",
+    "machine": "arm64",
+    "stim": "1.15.0",
+    "date": "2026-06-09"
+  },
+  "files": {
+    "bb72_r6_p0.001_X.dem": {
+      "sha256": "1816acb0e48b67b661371a3fc406fc95fa53fb13952f3a391e3271b23bc7fac9"
+    },
+    "bb72_r6_p0.001_Z.dem": {
+      "sha256": "03a3f6f3021fcef587a3f7e8f156266d42a08135f68034d5f33dfdbd621e4eb8"
+    },
+    "bb72_r6_p0.002_X.dem": {
+      "sha256": "1bd8f7e5ce3edb7314fac40cedd03b6a5cbe1974ba6688831cf9f5825d3c764a"
+    },
+    "bb72_r6_p0.002_Z.dem": {
+      "sha256": "ec7cf88c543f905bf24097e0a3d44203c5eeeba92cfba6f5482596b5cab25f34"
+    },
+    "bb72_r6_p0.003_X.dem": {
+      "sha256": "fb3f7b81437e46c337b82a4d2ffe380ea12eb6bb0fd9fdcbf9b6fd291f0dfd43"
+    },
+    "bb72_r6_p0.003_Z.dem": {
+      "sha256": "344fca525111866f7f9979b7f0b93be7d3c4cca97f4564808e912068a69d6f1c"
+    },
+    "bb72_r6_p0.005_X.dem": {
+      "sha256": "a01d1af52af8bd765ff8205fac9e45206b71a13d5a13a9b6858d8303c038cc82"
+    },
+    "bb72_r6_p0.005_Z.dem": {
+      "sha256": "9fce9e89cf5b13fa7f59197ff581c03ab063f376c7369c589fdae2d0d538cd83"
+    }
+  }
+}

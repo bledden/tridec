@@ -159,9 +159,38 @@ than the Rust CPU decoder. **TODO:** distill the full table here.
   decode deadline at batch 1; see §4.2.
 - **CUDA-Q comparison is config-asymmetric** (§4.1).
 - **Exact-count reproduction is environment-pinned**: the no-regression test
-  reproduces grid counts exactly under stim 1.15.0 + ldpc 2.4.1 (the receipt
-  environment) and skips loudly elsewhere — stim's sampling stream is only
-  stable within a version.
+  reproduces grid counts exactly under stim 1.15.0 + ldpc 2.4.1 on the receipt
+  platform (darwin/arm64) and falls back to a statistical-equivalence tier
+  elsewhere — see §5.1.
+
+### 5.1 Reproducibility & platform notes (measured, 2026-06-09)
+
+Two cross-platform facts we measured while validating this package on
+darwin/arm64 (Apple M-series) and linux/x86_64 (H200 host), same stim 1.15.0,
+same `.stim` circuit file:
+
+1. **stim's circuit→DEM computation is platform-dependent at the ulp level.**
+   1512 of 1584 mechanism priors differed between the two platforms, max
+   relative difference 5.4e-16 (x86 long-double intermediates vs arm64
+   doubles). The float *text* rendering differs too (x86 prints more digits).
+   Consequence: a sha256 over the DEM's text — a common "byte-identical DEM"
+   gate, including the one this benchmark inherited from its source
+   experiments — is **platform-local**. It guarantees every decoder in one
+   run consumes the identical DEM; it does not transfer across platforms.
+2. **stim's seeded detector sampler is platform-dependent.** The same seed on
+   the same circuit produced entirely different detector samples on the two
+   platforms, so exact failure-count reproduction across platforms is not
+   merely fragile — it is impossible by construction.
+
+Design consequence — **pin artifacts, not generators**: the canonical
+fixtures of this package are the `.dem` files themselves (file bytes are
+platform-independent and sha256-pinned in `tests/fixtures/bb72/
+dem_manifest.json`); the `.stim` circuits are provenance, checked by a
+structure-identical + priors-within-1e-12 regeneration test on every
+platform, and by strict text-hash identity against the source-grid pins on
+the receipt platform only. Matched-decoder comparisons that must be
+reproducible across machines should distribute the DEM artifact, not the
+generating circuit.
 
 ## 6. Reproduction
 
