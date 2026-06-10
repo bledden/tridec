@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tridec"
-version = "0.1.0.dev0"
+version = "0.1.0a1"
 description = "Vendor-portable GPU decoders for quantum LDPC codes: Triton min-sum BP and Relay-BP on NVIDIA (CUDA) and AMD (ROCm), with CPU reference implementations, consuming any stim DetectorErrorModel or raw parity-check matrices."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,6 +29,11 @@ dependencies = [
     "scipy>=1.10",
     "stim>=1.13",
 ]
+
+[project.urls]
+Repository = "https://github.com/bledden/tridec"
+Documentation = "https://github.com/bledden/tridec/blob/master/docs/benchmark.md"
+Issues = "https://github.com/bledden/tridec/issues"
 
 [project.optional-dependencies]
 # torch backend: batched BP that runs on CPU and CUDA/ROCm devices.
