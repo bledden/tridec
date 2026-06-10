@@ -363,19 +363,17 @@
    "python": "3.12.12"
   },
   "fails_per_repeat": [
-   879,
    880,
    880,
    879,
-   879
+   880,
+   880
   ],
   "per_shot_flips_vs_repeat0": [
    {
     "vs_repeat0": 1,
-    "n_shots_differing": 1,
-    "shot_indices": [
-     34468
-    ]
+    "n_shots_differing": 0,
+    "shot_indices": []
    },
    {
     "vs_repeat0": 2,
