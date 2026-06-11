@@ -1,5 +1,9 @@
 # Megakernel spike (issue #2, v0.2): single-launch persistent BP / Relay-BP on Metal
 
+> **Cloud follow-up landed:** the CUDA half of the deferred work (barrier
+> verification, BLOCK=128/256 + fp64 gates, autotune, H200 receipts) is in
+> `megakernel_h200.md` / `megakernel_h200.json`.
+
 **Date:** 2026-06-10
 **Status:** PRELIMINARY / EXPERIMENTAL — Metal (triton-metal) receipts only.
 H200/MI300X receipts + the CUDA/ROCm autotune pass are a later cloud session.

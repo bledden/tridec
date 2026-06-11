@@ -33,6 +33,19 @@ its own ``stop_nconv`` -- the relay_bp Rust oracle's per-shot semantics.
 ``early_exit=False`` runs all legs for all shots (the bit-identity
 validation mode vs the host loop with an unreachable ``stop_nconv``).
 
+DEGENERATE LOWEST-WEIGHT TIES (observed on H200, 2026-06)
+---------------------------------------------------------
+Distinct syndrome-consistent solutions can carry EXACTLY equal fp64 weight
+(measured: 2/256 shots on the canonical BB cell under the all-legs
+schedule, hamming-distance 4-6 apart, weights equal to the last fp64 bit).
+Both the host loop and the megakernel keep the FIRST strictly-lighter
+candidate (``w < best_w``), but the kernel sums candidate weights in the
+message dtype with a BLOCK-tree reduction while the host sums in fp64, so
+an exact tie can round 1 ulp apart and break toward a different -- equally
+valid -- solution. The CUDA identity gate (tests/test_megakernel_cuda.py)
+accepts a prediction mismatch ONLY after verifying the shot is an exact
+fp64-weight tie between syndrome-consistent solutions.
+
 TRITON-METAL 3.7 CODEGEN CONSTRAINTS (probed, 2026-06; see
 bench/receipts/megakernel_metal_spike.md)
 ----------------------------------------------------------
@@ -89,22 +102,54 @@ except Exception:  # pragma: no cover - triton is an optional extra
     _HAVE_TRITON = False
 
 
-def _default_block():
-    """Lane count per program: 32 on the triton-metal environment (one
-    lockstep SIMD-group; triton-metal drops ``tl.debug_barrier`` -- see
-    module docstring), 128 elsewhere (<=128 also required by triton-metal's
-    in-loop reduction codegen, and a reasonable CTA width on CUDA/ROCm
-    pending the cloud autotune pass)."""
+def _is_metal_env():
     import sys
-    if sys.platform == "darwin":
+    if sys.platform != "darwin":
+        return False
+    try:
+        import triton_metal  # noqa: F401
+        return not torch.cuda.is_available()
+    except Exception:
+        return False
+
+
+# (block, num_warps) per (device-name substring, kernel), from the v0.2
+# cloud autotune sweeps (bench/megakernel_cuda.py: every config is
+# correctness-gated -- BP posterior bit-identity vs BpTriton, relay
+# prediction identity vs the reference config with verified-tie exemption,
+# run-twice determinism -- before it is timed; receipts in
+# bench/receipts/megakernel_<gpu>.json). Lookup is by substring of
+# ``torch.cuda.get_device_name``; unknown devices fall back to (128, 4).
+# H200 sweep (BB cell, 2000 shots): ALL 24 configs passed their gates;
+# winners bp=(512,8) 5.50 ms / relay=(256,8) 91.6 ms, with (256,8)/(128,8)
+# within ~1-5% for bp -- warps=8 mattered more than BLOCK.
+_CUDA_TUNED = {
+    "H200": {"bp": (512, 8), "relay": (256, 8)},
+}
+
+
+def _tuned_config(kind):
+    """(block, num_warps) for this device and kernel ``kind`` ("bp" or
+    "relay"). On the triton-metal environment: (32, None) -- one lockstep
+    SIMD-group, and num_warps is not passed (triton-metal drops
+    ``tl.debug_barrier``; see module docstring). On CUDA/ROCm: the autotuned
+    per-arch table above, default (128, 4)."""
+    if _is_metal_env():
+        return 32, None
+    if torch.cuda.is_available():
         try:
-            import triton_metal  # noqa: F401
-            import torch as _torch
-            if not _torch.cuda.is_available():
-                return 32
+            name = torch.cuda.get_device_name(0)
         except Exception:
-            pass
-    return 128
+            name = ""
+        for sub, cfgs in _CUDA_TUNED.items():
+            if sub in name:
+                return cfgs[kind]
+    return 128, 4
+
+
+def _default_block():
+    """Back-compat shim: lane count per program (see ``_tuned_config``)."""
+    return _tuned_config("bp")[0]
 
 
 if _HAVE_TRITON:
@@ -245,7 +290,11 @@ if _HAVE_TRITON:
             tl.store(beh_b + b_offs, lam0 * 0.0, mask=bm)
         tl.debug_barrier()      # init mu/M visible to the first check pass
 
-        best_w = INF + 0.0
+        # typed scalar accumulator: must be DT, not the fp32 python-float
+        # default -- with DT=fp64 the loop-carried type would otherwise flip
+        # fp32 -> fp64 across the leg loop (compile error on CUDA triton 3.0;
+        # the fp32-only Metal spike never hit this).
+        best_w = tl.full([], INF, DT)
         nconv = 0
         legs_run = 0
         iters_run = 0
@@ -375,21 +424,23 @@ class BpMegaTriton(BpTriton):
     the two-kernel path (same per-(shot,row) operation order)."""
 
     def __init__(self, H, priors, max_iter=30, ms_scaling_factor=0.625,
-                 block_s=256, block=None):
+                 block_s=256, block=None, num_warps=None):
         super().__init__(H, priors, max_iter=max_iter,
                          ms_scaling_factor=ms_scaling_factor, block_s=block_s)
-        self.block = int(block) if block is not None else _default_block()
+        t_block, t_warps = _tuned_config("bp")
+        self.block = int(block) if block is not None else t_block
+        self.num_warps = int(num_warps) if num_warps is not None else t_warps
         self._edge_bit_i32 = torch.as_tensor(
             self._edge_bit_np.astype(np.int32))
 
     @classmethod
     def from_dem(cls, dem, max_iter=30, ms_scaling_factor=0.625, block_s=256,
-                 block=None):
+                 block=None, num_warps=None):
         from ..dem import extract
         ex = extract(dem)
         obj = cls(ex["H"], priors=ex["priors"], max_iter=max_iter,
                   ms_scaling_factor=ms_scaling_factor, block_s=block_s,
-                  block=block)
+                  block=block, num_warps=num_warps)
         obj._dem = dem
         obj.dem = dem
         obj._Lo = ex["Lo"].toarray().astype(np.uint8)
@@ -409,13 +460,14 @@ class BpMegaTriton(BpTriton):
         nu = torch.empty((S, E), dtype=torch.float32, device=dev)
         post = torch.empty((S, N), dtype=torch.float32, device=dev)
         syn_u8 = syn_t.to(torch.uint8).contiguous()
+        lk = {} if self.num_warps is None else {"num_warps": self.num_warps}
         _bp_megakernel[(S,)](
             mu, nu, post, syn_u8, lam,
             cedge, bedge, ebit,
             S, E, N, C,
             int(n_iter), self.ms,
             MAXDEG_C=self.MAXDEG_C, MAXDEG_B=self.MAXDEG_B,
-            BLOCK=self.block, INF=_INF,
+            BLOCK=self.block, INF=_INF, **lk,
         )
         return post.t(), mu.t(), nu.t()
 
@@ -433,14 +485,16 @@ class RelayBpMegaTriton(RelayBpTriton):
                  set_max_iter=60, gamma_dist_interval=(-0.24, 0.66),
                  stop_nconv=5, stopping_criterion="nconv", alpha=1.0,
                  gamma_seed=12345, block_s=256, dtype="float64",
-                 block=None, early_exit=True):
+                 block=None, early_exit=True, num_warps=None):
         super().__init__(H, priors, gamma0=gamma0, pre_iter=pre_iter,
                          num_sets=num_sets, set_max_iter=set_max_iter,
                          gamma_dist_interval=gamma_dist_interval,
                          stop_nconv=stop_nconv,
                          stopping_criterion=stopping_criterion, alpha=alpha,
                          gamma_seed=gamma_seed, block_s=block_s, dtype=dtype)
-        self.block = int(block) if block is not None else _default_block()
+        t_block, t_warps = _tuned_config("relay")
+        self.block = int(block) if block is not None else t_block
+        self.num_warps = int(num_warps) if num_warps is not None else t_warps
         self.early_exit = bool(early_exit)
         self._edge_bit_i32 = torch.as_tensor(
             self._edge_bit_np.astype(np.int32))
@@ -458,7 +512,7 @@ class RelayBpMegaTriton(RelayBpTriton):
                  set_max_iter=60, gamma_dist_interval=(-0.24, 0.66),
                  stop_nconv=5, stopping_criterion="nconv", alpha=1.0,
                  gamma_seed=12345, block_s=256, dtype="float64",
-                 block=None, early_exit=True):
+                 block=None, early_exit=True, num_warps=None):
         from ..dem import extract
         ex = extract(dem)
         obj = cls(ex["H"], priors=ex["priors"], gamma0=gamma0,
@@ -468,7 +522,7 @@ class RelayBpMegaTriton(RelayBpTriton):
                   stop_nconv=stop_nconv,
                   stopping_criterion=stopping_criterion, alpha=alpha,
                   gamma_seed=gamma_seed, block_s=block_s, dtype=dtype,
-                  block=block, early_exit=early_exit)
+                  block=block, early_exit=early_exit, num_warps=num_warps)
         obj._dem = dem
         obj.dem = dem
         obj._Lo = ex["Lo"].toarray().astype(np.uint8)
@@ -515,6 +569,7 @@ class RelayBpMegaTriton(RelayBpTriton):
 
         dt = tl.float64 if self.dtype == "float64" else tl.float32
         n_legs = 1 + self.num_sets
+        lk = {} if self.num_warps is None else {"num_warps": self.num_warps}
         _relay_megakernel[(S,)](
             mu, nu, M, best_eh, best_w, nconv, legs, iters,
             syn_u8, lam, wllr_dt, gamma_all,
@@ -524,7 +579,7 @@ class RelayBpMegaTriton(RelayBpTriton):
             self.ms,
             MAXDEG_C=self.MAXDEG_C, MAXDEG_B=self.MAXDEG_B,
             BLOCK=self.block, INF=_INF, DT=dt,
-            EARLY_EXIT=1 if self.early_exit else 0,
+            EARLY_EXIT=1 if self.early_exit else 0, **lk,
         )
         self.last_stats = dict(
             nconv=nconv.cpu().numpy(),
