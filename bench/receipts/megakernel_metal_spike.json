@@ -1,0 +1,145 @@
+{
+ "meta": {
+  "STATUS": "PRELIMINARY / EXPERIMENTAL -- megakernel spike on the triton-metal environment (fp32, CPU tensors, block=32; see tridec/backends/megakernel.py docstring for the triton-metal codegen constraints). H200/MI300X receipts + autotune deferred to the cloud session (issue #2).",
+  "date": "2026-06-10",
+  "platform": {
+   "system": "darwin",
+   "machine": "arm64",
+   "python": "3.14.4"
+  },
+  "versions": {
+   "stim": "1.15.0",
+   "torch": "2.9.1",
+   "triton": "3.7.0",
+   "relay_bp": "?",
+   "numpy": "2.2.6"
+  },
+  "protocol": "canonical BB bb72_r6_p0.003_Z + surface_d3_r3_p0.003 fixtures, 2000 shots (stim sampler seed 0). Gates mirror tests/test_bp_triton.py, test_relay_triton.py, test_metal.py. Bench = wall-clock decode_batch, warmup/reps recorded per entry."
+ },
+ "results": {
+  "bp_bb72": {
+   "label": "bb72_r6_p0.003_Z",
+   "shots": 2000,
+   "block": 32,
+   "bit_identity_vs_bptriton_30iter": 1.0,
+   "posterior_maxdiff_vs_bptriton": 0.0,
+   "determinism_exact": 1.0,
+   "one_iter_hard_agree_vs_numpy": 1.0,
+   "thirty_iter_hard_agree_vs_numpy": 0.9999801136363636,
+   "ler_numpy": 167,
+   "ler_bptriton": 168,
+   "ler_mega": 168,
+   "decode_pred_identity_vs_bptriton": 1.0,
+   "gates": {
+    "bit_identity": true,
+    "agree_1iter": true,
+    "agree_30iter": true,
+    "ler": true,
+    "deterministic": true
+   }
+  },
+  "bp_surface": {
+   "label": "surface_d3_r3_p0.003",
+   "shots": 2000,
+   "block": 32,
+   "bit_identity_vs_bptriton_30iter": 1.0,
+   "posterior_maxdiff_vs_bptriton": 0.0,
+   "determinism_exact": 1.0,
+   "one_iter_hard_agree_vs_numpy": 1.0,
+   "thirty_iter_hard_agree_vs_numpy": 1.0,
+   "ler_numpy": 76,
+   "ler_bptriton": 76,
+   "ler_mega": 76,
+   "decode_pred_identity_vs_bptriton": 1.0,
+   "gates": {
+    "bit_identity": true,
+    "agree_1iter": true,
+    "agree_30iter": true,
+    "ler": true,
+    "deterministic": true
+   }
+  },
+  "relay_identity_all_legs": {
+   "n": 256,
+   "per_shot_identity": 1.0,
+   "determinism": 1.0,
+   "host_s": 7.767743541975506,
+   "mega_s": 0.46549924998544157,
+   "gates": {
+    "identity": true,
+    "deterministic": true
+   }
+  },
+  "relay_full_nconv5": {
+   "n": 2000,
+   "ler_oracle": 31,
+   "ler_host": 39,
+   "ler_mega": 39,
+   "per_shot_agree_mega_vs_host": 0.9985,
+   "per_shot_agree_mega_vs_oracle": 0.992,
+   "oracle_s": 1.2536450420157053,
+   "host_s": 32.54338354204083,
+   "mega_s": 0.49298583302879706,
+   "mega_legs_mean": 5.55,
+   "mega_legs_max": 61,
+   "mega_iters_mean": 353.0,
+   "mega_unconverged": 6,
+   "gates": {
+    "ler_vs_oracle": true,
+    "ler_vs_host": true
+   }
+  },
+  "bench_bp_2000": {
+   "two_kernel": {
+    "n_warmup": 2,
+    "n_reps": 5,
+    "mean_s": 0.17797819178085775,
+    "min_s": 0.17274087498662993,
+    "per_rep_s": [
+     0.1784633329953067,
+     0.17976141697727144,
+     0.17942554195178673,
+     0.17274087498662993,
+     0.1794997919932939
+    ]
+   },
+   "megakernel": {
+    "n_warmup": 2,
+    "n_reps": 5,
+    "mean_s": 0.02613482519518584,
+    "min_s": 0.02543749997857958,
+    "per_rep_s": [
+     0.02610529202502221,
+     0.026861749996896833,
+     0.026572124974336475,
+     0.025697459001094103,
+     0.02543749997857958
+    ]
+   }
+  },
+  "bench_relay_2000": {
+   "host_loop": {
+    "n_warmup": 1,
+    "n_reps": 2,
+    "mean_s": 29.957157125027152,
+    "min_s": 29.928707625018433,
+    "per_rep_s": [
+     29.928707625018433,
+     29.98560662503587
+    ]
+   },
+   "megakernel": {
+    "n_warmup": 1,
+    "n_reps": 3,
+    "mean_s": 0.46021615265635774,
+    "min_s": 0.4545560829574242,
+    "per_rep_s": [
+     0.4545560829574242,
+     0.4659972499939613,
+     0.4600951250176877
+    ]
+   },
+   "speedup": 65.09366729549818
+  }
+ }
+}
