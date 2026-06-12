@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.2.0 — 2026-06-11
+
+**Megakernel backend (opt-in), three-platform-validated — two honest negatives
+stated.** A single-launch *persistent megakernel* runs the entire Relay-BP
+decode (every BP iteration, every relay leg, in-kernel syndrome convergence +
+`nconv` stop + lowest-weight selection) in **one kernel launch per
+`decode_batch`** with **per-shot early exit**, replacing v0.1's host loop of
+~thousands of launches. Same math — validated bit-/LER-identical to the
+two-kernel path and the `relay-bp` Rust oracle (14/14 gates at BLOCK 128/256 on
+both CUDA and ROCm, incl. fp64-vs-oracle; barriers verified honored on both —
+PTX `bar.sync` / AMDGCN `s_barrier`).
+
+Relay-BP speedups vs the v0.1 two-kernel path:
+- **Metal** (M4 Max, triton-metal, BLOCK=32): 30.0 s → **0.46 s** / 2000 shots (**65×**).
+- **NVIDIA H200** (CUDA, triton 3.0): **9–18×** (fp64 to 37×); batch-1 62.5 → 3.44 ms.
+- **AMD MI300X** (ROCm, torch 2.5.1+rocm6.2 / triton 3.1, gfx942): **11–22×**; batch-1 8.48 ms.
+
+Per-arch autotuned configs (`_CUDA_TUNED` keyed by `gcnArchName`/device name);
+AMD's wavefront-64 wants the opposite shape from NVIDIA warps.
+
+**Two honest negatives (detailed in the receipts + README):**
+1. The *plain-BP* megakernel **loses to the two-kernel path at large batch**
+   (no early-exit lever) — it is a single-shot *latency* tool (batch-1 ~1.7× the
+   two-kernel BP path); the two-kernel path stays the BP throughput default.
+2. The cross-vendor latency gap **widened** under the megakernel: H200 leads
+   MI300X **2.47× at batch-1** (vs ~9% under v0.1's two-kernel path), 1.25–1.33×
+   batched. Correctness is identical; the pitch is portability + performance on
+   both, not parity.
+
+**Opt-in, not yet default:** the megakernel ships as
+`tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`; `from_dem`
+auto-dispatch is deferred to **v0.2.1** (#5) — the standalone classes are gated,
+but the public-API dispatch path needs its own GPU gating before the default
+flips, and that discipline is not bent for the tag.
+
+Receipts: `bench/receipts/megakernel_{h200,mi300x,metal}*`. Metal is BLOCK=32
+pending an upstream triton-metal barrier fix (confirmed on its dev branch).
+
 ## 0.1.0 — 2026-06-10
 
 First release. Open, vendor-portable Triton min-sum BP and Relay-BP decoders

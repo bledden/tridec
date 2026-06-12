@@ -21,6 +21,50 @@ H200 (CUDA 12.4, triton 3.0) and an AMD MI300X (ROCm 7.0, triton 3.4) — see
 same kernels through [triton-metal](https://github.com/bledden/triton-metal)
 as an **experimental** backend (see below).
 
+## v0.2: the megakernel backend (opt-in)
+
+A single-launch **persistent megakernel** — the entire Relay-BP decode (every
+BP iteration, every relay leg, in-kernel syndrome convergence + `nconv` stop +
+lowest-weight selection) in **one kernel launch per `decode_batch`**, with
+**per-shot early exit**, instead of the v0.1 host loop's thousands of launches.
+Validated on all three platforms against the v0.1 two-kernel path and the
+`relay-bp` Rust oracle (14/14 gates at BLOCK 128/256 on CUDA and ROCm; barriers
+verified honored on both):
+
+| Relay-BP megakernel vs v0.1 two-kernel | speedup |
+|---|---|
+| Apple M4 Max (Metal, triton-metal) | **65×** — 30.0 s → 0.46 s / 2000 shots |
+| NVIDIA H200 (CUDA) | **9–18×** — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
+| AMD MI300X (ROCm) | **11–22×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
+
+Opt-in today via `tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`;
+**auto-dispatch from `from_dem(..., backend="auto")` lands in v0.2.1** once the
+public-API path is gated on a GPU
+([#5](https://github.com/bledden/tridec/issues/5)). Receipts:
+`bench/receipts/megakernel_{h200,mi300x,metal}*`.
+
+### Megakernel: honest limits + tuning
+
+- **Plain-BP megakernel is a single-shot *latency* tool, not a throughput
+  tool.** At batch-1 it is ~1.7× faster than the two-kernel BP path
+  (H200 0.61 vs 1.06 ms); at large batch it *loses* (plain BP has no early-exit
+  lever) — the two-kernel BP path stays the throughput default. Use
+  `BpMegaTriton` for low-latency bare BP, `RelayBpMegaTriton` for the accurate
+  latency path.
+- **Real-time / single-shot: H200 leads MI300X 2.47× at batch-1** (3.44 vs
+  8.48 ms) — wider than v0.1's ~9% two-kernel gap, because the
+  single-CTA-per-shot design amplifies per-SM and codegen differences at
+  batch-1. Batched, the gap is 1.25–1.33×; correctness is identical across
+  vendors. (The pitch is *vendor-portable + performant on both*, never parity.)
+- **Per-arch autotuning.** v0.2 ships autotuned `BLOCK`/`num_warps` configs for
+  H200, MI300X and M4 Max, pinned in `_CUDA_TUNED` keyed by
+  `gcnArchName`/device name. AMD (wavefront-64) wants the *opposite* shape from
+  NVIDIA warps — low warps for BP, max BLOCK+warps for relay.
+- **Metal is BLOCK=32 only** for now — a transient `triton-metal` barrier-drop
+  bug (fix confirmed on its dev branch); the Metal autotune widens once that
+  merges. fp32-only on Metal (no fp64), same as the two-kernel path, and the
+  fp32 near-tie-flip caveat below applies to the megakernel unchanged.
+
 ## Install
 
 Most users want `pip install "tridec[torch,decoders]"` (CPU+GPU torch backend
@@ -153,14 +197,16 @@ shots, fresh instances: 879/880/879) — documented in
 
 ## Status
 
-`0.1.0` — first release. The kernels and their validation receipts are
-stable; the public API surface is young and may still move before 1.0.
-Minor `0.x` releases may rename or remove public API; `1.0` will lock the
-surface. GPU paths require triton + a CUDA/ROCm GPU (or the experimental
-triton-metal environment); the GPU/metal test tiers skip cleanly where
-unavailable.
-Validated through the installed package on MI300X/ROCm (v0.1.0) and via
-carried receipts on H200/CUDA; Metal is experimental.
+`0.2.0` — adds the opt-in megakernel backend (tri-platform validated; see
+above). v0.1.0 shipped the two-kernel BP/Relay-BP path + the validation
+discipline. The kernels and their receipts are stable; the public API surface
+is young and may still move before 1.0 — minor `0.x` releases may rename or
+remove public API; `1.0` will lock the surface. **Next (`v0.2.1`):
+megakernel auto-dispatch from `from_dem(..., backend="auto")`, gated on the
+public-API path running on a GPU
+([#5](https://github.com/bledden/tridec/issues/5)).** GPU paths require triton
++ a CUDA/ROCm GPU (or the experimental triton-metal environment); the
+GPU/metal test tiers skip cleanly where unavailable.
 
 ## License
 
