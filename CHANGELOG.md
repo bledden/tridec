@@ -14,8 +14,10 @@ PTX `bar.sync` / AMDGCN `s_barrier`).
 
 Relay-BP speedups vs the v0.1 two-kernel path:
 - **Metal** (M4 Max, triton-metal, BLOCK=32): 30.0 s → **0.46 s** / 2000 shots (**65×**).
-- **NVIDIA H200** (CUDA, triton 3.0): **9–18×** (fp64 to 37×); batch-1 62.5 → 3.44 ms.
-- **AMD MI300X** (ROCm, torch 2.5.1+rocm6.2 / triton 3.1, gfx942): **11–22×**; batch-1 8.48 ms.
+- **NVIDIA H200** (CUDA, triton 3.0): **9–19×** fp32 (fp64 to 37× at mid-batch); batch-1 62.5 → 3.44 ms.
+- **AMD MI300X** (ROCm, torch 2.5.1+rocm6.2 / triton 3.1, gfx942): **9–32×** fp32; batch-1 8.48 ms.
+
+(Speedups are vs each platform's own v0.1 path, min–max across batch 1–16384.)
 
 Per-arch autotuned configs (`_CUDA_TUNED` keyed by `gcnArchName`/device name);
 AMD's wavefront-64 wants the opposite shape from NVIDIA warps.

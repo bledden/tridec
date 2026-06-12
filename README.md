@@ -34,8 +34,12 @@ verified honored on both):
 | Relay-BP megakernel vs v0.1 two-kernel | speedup |
 |---|---|
 | Apple M4 Max (Metal, triton-metal) | **65×** — 30.0 s → 0.46 s / 2000 shots |
-| NVIDIA H200 (CUDA) | **9–18×** — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
-| AMD MI300X (ROCm) | **11–22×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
+| NVIDIA H200 (CUDA) | **9–19×** — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
+| AMD MI300X (ROCm) | **9–32×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
+
+*(Speedups are vs **each platform's own** v0.1 two-kernel path and vary with
+batch size — min–max across batch 1–16384. Absolute cross-vendor performance,
+where H200 leads, is in the limits below.)*
 
 Opt-in today via `tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`;
 **auto-dispatch from `from_dem(..., backend="auto")` lands in v0.2.1** once the
@@ -197,8 +201,8 @@ reproduce **exactly** — all 24 BP / BP-OSD-0 / BP-OSD-10 counts, and 7 of 8
 BPLSD counts. The single deviation (BPLSD, p=0.002/X: 879 vs 880, one shot
 in 200,000) is attributed by a same-environment repeat experiment to
 run-to-run nondeterminism inside ldpc's `BpLsdDecoder` itself (identical
-shots, fresh instances: 879/880/879) — documented in
-`bench/receipts/full_grid_noregression.json`.
+shots, fresh instances, 5 repeats: 880/880/879/880/880 — the same single shot
+flips) — documented in `bench/receipts/full_grid_noregression.json`.
 
 ## Status
 
