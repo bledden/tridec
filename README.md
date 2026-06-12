@@ -34,12 +34,16 @@ verified honored on both):
 | Relay-BP megakernel vs v0.1 two-kernel | speedup |
 |---|---|
 | Apple M4 Max (Metal, triton-metal) | **65×** — 30.0 s → 0.46 s / 2000 shots |
-| NVIDIA H200 (CUDA) | **9–19×** — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
+| NVIDIA H200 (CUDA) | **9–19×** fp32 (fp64 to 37× mid-batch) — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
 | AMD MI300X (ROCm) | **9–32×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
 
 *(Speedups are vs **each platform's own** v0.1 two-kernel path and vary with
 batch size — min–max across batch 1–16384. Absolute cross-vendor performance,
-where H200 leads, is in the limits below.)*
+where H200 leads, is in the limits below.) Receipt stacks: H200 (CUDA 12.4 /
+triton 3.0), MI300X (ROCm 6.2 / torch 2.5.1 / triton 3.1, gfx942), M4 Max
+(triton-metal); raw in `bench/receipts/megakernel_*`. The Metal 30.0 s
+baseline and the v0.1 Apple section's 31 s below are independent measurement
+runs of the same two-kernel relay (run-to-run jitter), not a discrepancy.*
 
 Opt-in today via `tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`;
 **auto-dispatch from `from_dem(..., backend="auto")` lands in v0.2.1** once the
