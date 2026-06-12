@@ -121,6 +121,17 @@ def _ring_nobarrier(X, OUT, n_rounds, BLOCK: tl.constexpr):
     tl.store(OUT + pid * BLOCK + offs, tl.load(base + offs))
 
 
+def _bar_count(asm):
+    # CUDA: PTX bar.sync ; ROCm/HIP: AMDGCN s_barrier. The behavioral ring
+    # test below is the real proof a barrier is honored; this just confirms
+    # the instruction is present in the emitted ISA on both backends.
+    if "ptx" in asm:
+        return asm["ptx"].count("bar.sync")
+    if "amdgcn" in asm:
+        return asm["amdgcn"].count("s_barrier")
+    return -1
+
+
 def barrier_sanity():
     out = {}
     for block in (128, 256):
@@ -139,14 +150,14 @@ def barrier_sanity():
             out[f"{tag}_block{block}"] = dict(
                 exact=bool(np.array_equal(got, exp)),
                 frac_match=float((got == exp).mean()),
-                bar_sync_in_ptx=h.asm["ptx"].count("bar.sync"))
+                bar_sync_in_ptx=_bar_count(h.asm))
     # bar.sync counts in the REAL megakernels' PTX (all compiled variants).
     ptx = {}
     for name, kern in (("bp", _bp_megakernel), ("relay", _relay_megakernel)):
         cnt = []
         for _, vv in kern.cache.items():
             for _, compiled in vv.items():
-                cnt.append(compiled.asm["ptx"].count("bar.sync"))
+                cnt.append(_bar_count(compiled.asm))
         ptx[name] = cnt
     out["megakernel_ptx_bar_sync"] = ptx
     ok = (out["barrier_block128"]["exact"] and out["barrier_block256"]["exact"]

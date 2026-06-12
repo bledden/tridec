@@ -123,8 +123,16 @@ def _is_metal_env():
 # H200 sweep (BB cell, 2000 shots): ALL 24 configs passed their gates;
 # winners bp=(512,8) 5.50 ms / relay=(256,8) 91.6 ms, with (256,8)/(128,8)
 # within ~1-5% for bp -- warps=8 mattered more than BLOCK.
+# MI300X/ROCm sweep (gfx942, torch 2.5.1+rocm6.2 / triton 3.1.0, BB cell
+# 2000 shots): ALL 24 configs passed their gates; winners bp=(64,2)
+# 6.15 ms / relay=(512,8) 149 ms. AMD wavefront=64, so triton num_warps
+# counts 64-lane waves: low warps win for bp (warps=8 oversubscribes the
+# small per-shot tile), high warps+BLOCK win for relay. torch reports
+# get_device_name()="AMD Radeon Graphics" on this SR-IOV VF, so the row is
+# keyed by gcnArchName (gfx942), not the device name -- see _tuned_config.
 _CUDA_TUNED = {
     "H200": {"bp": (512, 8), "relay": (256, 8)},
+    "gfx942": {"bp": (64, 2), "relay": (512, 8)},  # MI300X (CDNA3, gfx942)
 }
 
 
@@ -141,6 +149,10 @@ def _tuned_config(kind):
             name = torch.cuda.get_device_name(0)
         except Exception:
             name = ""
+        try:
+            name = name + " " + torch.cuda.get_device_properties(0).gcnArchName
+        except Exception:
+            pass
         for sub, cfgs in _CUDA_TUNED.items():
             if sub in name:
                 return cfgs[kind]
