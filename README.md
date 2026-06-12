@@ -132,6 +132,11 @@ oracle for the Triton path.
 | AMD MI300X, ROCm 7.0.0, torch 2.9, triton 3.4.0 | Same kernels, unmodified: identical primitive-identity numbers (pre-leg posterior max-diff 1.8e-15) and the same oracle-vs-Triton LER identity (carried receipts) — **and validated through the installed package for v0.1.0** (`bench/receipts/mi300x_packaged.json`): full suite 88 passed / 10 skipped on gfx942 (GPU tiers bind, darwin-only strict tiers skip), packaged-API BP 166 = numpy 166 fails / 2000, Relay-BP fp32 34 vs Rust oracle 31 (overlapping CIs), throughput within ±2.2% of the carried receipt |
 | Apple silicon (M4 Max), triton-metal | **Experimental, spike-validated only** (`bench/receipts/metal_spike.md`): both kernels pass the same correctness gates at fp32; see the section below |
 
+*This table covers the **two-kernel** BP/Relay-BP path (v0.1). The v0.2
+**megakernel**'s own per-platform validation (14/14 gates on CUDA + ROCm,
+65× on Metal) is in the [megakernel section](#v02-the-megakernel-backend-opt-in)
+above, with raw receipts in `bench/receipts/megakernel_*`.*
+
 ## Experimental: Apple silicon (Metal)
 
 The same Triton kernels run on Apple-silicon GPUs through
