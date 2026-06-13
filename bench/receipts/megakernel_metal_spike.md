@@ -1,5 +1,14 @@
 # Megakernel spike (issue #2, v0.2): single-launch persistent BP / Relay-BP on Metal
 
+> **BLOCK-lift follow-up landed (2026-06-13):** the two triton-metal codegen
+> gaps that forced `BLOCK=32` below (dropped `tl.debug_barrier`; reduction-in-
+> loop at `BLOCK≥256`) are fixed upstream (CODEGEN_VERSION 2026.06.13). Metal is
+> now lifted to **BP=256 / relay=128** — see `megakernel_metal_lift.md` /
+> `.json` for the re-measured numbers. This receipt is retained as the
+> historical record of the `BLOCK=32` workaround and the triton-metal
+> limitation repros. (Relay still refuses at `BLOCK≥256`, loudly — detailed in
+> the lift receipt.)
+
 > **Cloud follow-up landed:** the CUDA half of the deferred work (barrier
 > verification, BLOCK=128/256 + fp64 gates, autotune, H200 receipts) is in
 > `megakernel_h200.md` / `megakernel_h200.json`.

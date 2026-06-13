@@ -55,20 +55,28 @@ valid -- solution. The CUDA identity gate (tests/test_megakernel_cuda.py)
 accepts a prediction mismatch ONLY after verifying the shot is an exact
 fp64-weight tie between syndrome-consistent solutions.
 
-TRITON-METAL 3.7 CODEGEN CONSTRAINTS (probed, 2026-06; see
-bench/receipts/megakernel_metal_spike.md)
+TRITON-METAL CODEGEN STATUS (triton-metal CODEGEN_VERSION 2026.06.13;
+see bench/receipts/megakernel_metal_spike.md)
 ----------------------------------------------------------
-  * Cross-lane reductions (``tl.sum``) INSIDE dynamic loops fail Metal
-    codegen for BLOCK >= 256 (undeclared ``UNKNOWN_<addr>`` identifiers in
-    the emitted .metal source). BLOCK <= 128 compiles and runs correctly,
-    hence ``block=128`` is the default here.
-  * Assigning to a ``while``-carried variable inside a scalar ``if``
-    miscompiles SILENTLY (the assignment is dropped). The kernels therefore
-    use NO ``while`` loops and NO scalar-``if`` blocks: the leg loop is a
-    ``for`` whose inner iteration loop gets a ZERO trip count once the shot
-    converged (early exit as loop-bound algebra), carried scalars update
-    via arithmetic / ``tl.where``, and the conditional lowest-weight capture
-    is a scalar-bool-masked store plus a zero-trip weight pass.
+  * Cross-lane reductions (``tl.sum``) INSIDE dynamic loops: the
+    register-array spine FIXED this for the BP-megakernel shape -- the BP
+    megakernel now compiles + runs correctly at BLOCK 256-1024 (was capped
+    at 128; previously emitted undeclared ``UNKNOWN_<addr>`` identifiers).
+    The RELAY megakernel still REFUSES at BLOCK >= 256 with a
+    ``MetalNonRecoverableError`` ("refusing to emit silently-wrong output"):
+    its in-loop syndrome-convergence reduction + lowest-weight capture hit a
+    pattern the spine does not yet cover. Crucially this is a LOUD refusal at
+    compile time -- never silently-wrong output. So Metal uses block=256 for
+    BP and block=128 for relay (``_tuned_config``); both are verified
+    deterministic + correct at those sizes (gates below).
+  * The kernels use NO ``while`` loops and NO scalar-``if`` assignment
+    blocks (a ``while``-carried variable assigned inside a scalar ``if`` once
+    miscompiled silently on triton-metal). This structure is retained: the
+    leg loop is a ``for`` whose inner iteration loop gets a ZERO trip count
+    once the shot converged (early exit as loop-bound algebra), carried
+    scalars update via arithmetic / ``tl.where``, and the conditional
+    lowest-weight capture is a scalar-bool-masked store plus a zero-trip
+    weight pass. It is also good practice for threadgroup-uniform control.
 
 IN-PROGRAM PASS SYNCHRONIZATION (all platforms, not Metal-specific)
 -------------------------------------------------------------------
@@ -82,18 +90,18 @@ non-deterministic (observed on Metal: run-to-run posterior agreement ~0.80
 at 10 iterations). All barrier sites are in threadgroup-UNIFORM control
 flow (scalar loop bounds), as Metal requires.
 
-KNOWN triton-metal GAP (4c42e96, triton 3.7): ``tl.debug_barrier()`` is
-SILENTLY DROPPED -- triton 3.7 emits it as ``ttg.barrier all`` in TTGIR and
-triton-metal's lowerer only recognizes the pre-3.5 ``tt.debug_barrier``
-spelling (unknown ops are skipped without error). Until that one-line
-op-name mapping lands in triton-metal, the Metal configuration of these
-kernels MUST use ``block=32``: one threadgroup = one 32-wide SIMD-group,
-which executes in lockstep under uniform control flow, so the (dropped)
-barriers are not needed for correctness. ``_default_block()`` picks 32 on
-the triton-metal environment and 128 elsewhere. Verified on Metal at
-block=32: bit-identical posteriors vs the two-kernel ``BpTriton`` path and
-deterministic across repeated runs (see
-bench/receipts/megakernel_metal_spike.md).
+FIXED triton-metal GAP (CODEGEN_VERSION 2026.06.13): ``tl.debug_barrier()``
+is now HONORED on Metal. Earlier triton-metal silently dropped it (triton 3.7
+emits ``ttg.barrier all`` in TTGIR; the pre-fix lowerer only recognized the
+pre-3.5 ``tt.debug_barrier`` spelling and skipped unknown ops), which forced
+the Metal config to ``block=32`` (one 32-wide SIMD-group runs in lockstep, so
+the dropped barriers were not needed for correctness). With barriers honored,
+the BLOCK=32 pin is LIFTED: Metal now uses block=256 (BP) / block=128 (relay).
+Verified on Metal at the lifted blocks -- BP posteriors bit-identical to the
+two-kernel ``BpTriton`` path, relay LER matching the ``relay-bp`` oracle, and
+both deterministic run-to-run (the load-bearing barrier-honored gate; was
+~0.80 posterior agreement when the barriers were dropped). See
+tests/test_megakernel_metal.py + bench/receipts/megakernel_metal_spike.md.
 """
 import numpy as np
 import torch
@@ -147,12 +155,19 @@ _CUDA_TUNED = {
 
 def _tuned_config(kind):
     """(block, num_warps) for this device and kernel ``kind`` ("bp" or
-    "relay"). On the triton-metal environment: (32, None) -- one lockstep
-    SIMD-group, and num_warps is not passed (triton-metal drops
-    ``tl.debug_barrier``; see module docstring). On CUDA/ROCm: the autotuned
+    "relay"). On the triton-metal environment (CODEGEN_VERSION 2026.06.13,
+    barriers honored + reduction-in-loop fixed for the BP shape): bp=(256,
+    None), relay=(128, None) -- lifted off the old BLOCK=32 pin. num_warps is
+    not passed on Metal. Verified on M4 Max, 2000-shot BB cell: BP runs
+    deterministically + correctly at BLOCK 256-1024 (256 fastest, 20->12 ms,
+    1.67x); relay runs at BLOCK 128 (441->202 ms, 2.18x) but still REFUSES at
+    BLOCK>=256 with MetalNonRecoverableError (its in-loop convergence-reduction
+    + lowest-weight pass hits a codegen pattern the register-array spine does
+    not yet cover -- loud, never silent-wrong). See module docstring +
+    bench/receipts/megakernel_metal_spike.md. On CUDA/ROCm: the autotuned
     per-arch table above, default (128, 4)."""
     if _is_metal_env():
-        return 32, None
+        return (256, None) if kind == "bp" else (128, None)
     if torch.cuda.is_available():
         try:
             name = torch.cuda.get_device_name(0)

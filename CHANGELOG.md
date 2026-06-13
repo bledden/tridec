@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+**Metal megakernel lifted off the `BLOCK=32` pin.** The two `triton-metal`
+codegen gaps that forced `BLOCK=32` in 0.2.0 (silently-dropped
+`tl.debug_barrier`; cross-lane reduction-in-loop miscompiling at `BLOCK≥256`)
+are fixed upstream (CODEGEN_VERSION 2026.06.13). Metal now runs **BP at
+`BLOCK=256`** (20 → 12 ms, 1.67×) and **relay at `BLOCK=128`** (441 → 202 ms,
+2.18×), lifting the Metal relay headline from **65× → ~148×** vs the v0.1
+two-kernel path (30.0 s → 0.202 s / 2000 shots). Re-validated: all 4 Metal
+gates pass at the lifted defaults (BP bit-identity vs two-kernel, relay
+LER-vs-oracle, run-twice determinism — the barrier-honored gate).
+
+*One honest negative:* the **relay megakernel still refuses at `BLOCK≥256`** —
+`MetalNonRecoverableError` at compile time (a **loud refusal, never
+silent-wrong**), because its in-loop convergence-reduction + lowest-weight pass
+hits a pattern triton-metal's register-array spine doesn't yet cover. BP, using
+the simpler reported shape, runs at 256–1024. Reported upstream. Receipt:
+`bench/receipts/megakernel_metal_lift.{md,json}`.
+
 ## 0.2.0 — 2026-06-11
 
 **Megakernel backend (opt-in), three-platform-validated — two honest negatives

@@ -33,7 +33,7 @@ verified honored on both):
 
 | Relay-BP megakernel vs v0.1 two-kernel | speedup |
 |---|---|
-| Apple M4 Max (Metal, triton-metal) | **65×** — 30.0 s → 0.46 s / 2000 shots |
+| Apple M4 Max (Metal, triton-metal) | **~148×** — 30.0 s → 0.202 s / 2000 shots (relay BLOCK=128) |
 | NVIDIA H200 (CUDA) | **9–19×** fp32 (fp64 to 37× mid-batch) — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
 | AMD MI300X (ROCm) | **9–32×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
 
@@ -41,9 +41,11 @@ verified honored on both):
 batch size — min–max across batch 1–16384. Absolute cross-vendor performance,
 where H200 leads, is in the limits below.) Receipt stacks: H200 (CUDA 12.4 /
 triton 3.0), MI300X (ROCm 6.2 / torch 2.5.1 / triton 3.1, gfx942), M4 Max
-(triton-metal); raw in `bench/receipts/megakernel_*`. The Metal 30.0 s
-baseline and the v0.1 Apple section's 31 s below are independent measurement
-runs of the same two-kernel relay (run-to-run jitter), not a discrepancy.*
+(triton-metal, CODEGEN_VERSION 2026.06.13); raw in `bench/receipts/megakernel_*`
+— the Metal block-lift re-measure is in `megakernel_metal_lift.{md,json}`. The
+Metal 30.0 s baseline and the v0.1 Apple section's 31 s below are independent
+measurement runs of the same two-kernel relay (run-to-run jitter), not a
+discrepancy.*
 
 Opt-in today via `tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`;
 **auto-dispatch from `from_dem(..., backend="auto")` lands in v0.2.1** once the
@@ -68,10 +70,18 @@ public-API path is gated on a GPU
   H200, MI300X and M4 Max, pinned in `_CUDA_TUNED` keyed by
   `gcnArchName`/device name. AMD (wavefront-64) wants the *opposite* shape from
   NVIDIA warps — low warps for BP, max BLOCK+warps for relay.
-- **Metal is BLOCK=32 only** for now — a transient `triton-metal` barrier-drop
-  bug (fix confirmed on its dev branch); the Metal autotune widens once that
-  merges. fp32-only on Metal (no fp64), same as the two-kernel path, and the
-  fp32 near-tie-flip caveat below applies to the megakernel unchanged.
+- **Metal: lifted off the old BLOCK=32 pin** (triton-metal CODEGEN_VERSION
+  2026.06.13 honors `tl.debug_barrier` and fixed reduction-in-loop for the BP
+  shape). Metal now runs **BP at BLOCK=256** (20 → 12 ms, 1.67×) and **relay at
+  BLOCK=128** (441 → 202 ms, 2.18× — the ~148× headline above). *Honest
+  negative:* the relay megakernel still **refuses at BLOCK≥256** —
+  `MetalNonRecoverableError` at compile time, a **loud refusal, never
+  silent-wrong** — because its in-loop convergence-reduction + lowest-weight
+  pass hits a codegen pattern triton-metal's register-array spine doesn't yet
+  cover (reported upstream). BP, using the simpler reported shape, runs at
+  256–1024. fp32-only on Metal (no fp64), same as the two-kernel path, and the
+  fp32 near-tie-flip caveat below applies to the megakernel unchanged. Receipt:
+  `bench/receipts/megakernel_metal_lift.md`.
 
 ## Install
 
@@ -142,8 +152,9 @@ oracle for the Triton path.
 
 *This table covers the **two-kernel** BP/Relay-BP path (v0.1). The v0.2
 **megakernel**'s own per-platform validation (14/14 gates on CUDA + ROCm,
-65× on Metal) is in the [megakernel section](#v02-the-megakernel-backend-opt-in)
-above, with raw receipts in `bench/receipts/megakernel_*`.*
+~148× on Metal at the lifted BP=256/relay=128 blocks) is in the
+[megakernel section](#v02-the-megakernel-backend-opt-in) above, with raw
+receipts in `bench/receipts/megakernel_*`.*
 
 ## Experimental: Apple silicon (Metal)
 

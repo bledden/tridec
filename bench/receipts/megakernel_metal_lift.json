@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "STATUS": "BLOCK-LIFT follow-up to megakernel_metal_spike (2026-06-10). triton-metal CODEGEN_VERSION 2026.06.13 honors tl.debug_barrier (Bug 1) and fixed cross-lane-reduction-in-loop for the BP-megakernel shape (Bug 2), so the Metal BLOCK=32 pin is LIFTED: BP->256, relay->128. The relay megakernel still REFUSES at BLOCK>=256 (loud MetalNonRecoverableError, never silent-wrong). fp32, CPU(UMA) tensors, device='cpu'.",
+    "date": "2026-06-13",
+    "supersedes_config_in": "megakernel_metal_spike.{md,json} (which used BLOCK=32 throughout)",
+    "platform": {"system": "darwin", "machine": "arm64", "python": "3.14.4", "device": "Apple M4 Max"},
+    "versions": {
+      "triton_metal": "0.1.0a1 @ 0a1eafb (CODEGEN_VERSION 2026.06.13)",
+      "triton": "3.7.0",
+      "torch": "2.9.1",
+      "stim": "1.15.0",
+      "relay_bp": "0.2.2",
+      "numpy": "2.2.6"
+    },
+    "protocol": "canonical BB bb72_r6_p0.003_Z fixture (.stim sampler seed 0 for shots; pinned .dem for decode), 2000 shots. Gates applied BEFORE timing: run-twice determinism (the load-bearing barrier-honored gate -- was ~0.80 posterior agreement when barriers were dropped), BP hard-decision agreement vs fp64 numpy reference, relay LER + per-shot prediction agreement vs the relay_bp Rust oracle. Caches (~/.triton/cache, ~/.cache/triton_metal) cleared before the run per the codegen bump. tests/test_megakernel_metal.py: 4/4 PASS at the lifted defaults (BP=256, relay=128).",
+    "note_oracle_rng": "relay_bp's internal gamma RNG is not pinned, so the oracle's own failure count varies run-to-run (35 here; 31 in the 2026-06-10 spike). The gate is |LER_mega - LER_oracle| and per-shot agreement, both well within bars."
+  },
+  "block_sweep": {
+    "note": "Each BLOCK constructed via the block= constructor override on the canonical .dem; correctness gates run before the single timed decode (after 2 warmup decodes).",
+    "refs": {"numpy_bp_fails": 168, "relay_bp_oracle_fails": 35, "shots": 2000},
+    "bp": [
+      {"block": 32, "deterministic": true, "hard_agree_vs_numpy": 0.9905, "fails": 168, "ms": 20, "status": "ok"},
+      {"block": 128, "deterministic": true, "hard_agree_vs_numpy": 0.9905, "fails": 168, "ms": 15, "status": "ok"},
+      {"block": 256, "deterministic": true, "hard_agree_vs_numpy": 0.9905, "fails": 168, "ms": 13, "status": "ok (fastest)"},
+      {"block": 512, "deterministic": true, "hard_agree_vs_numpy": 0.9905, "fails": 168, "ms": 14, "status": "ok"},
+      {"block": 1024, "deterministic": true, "hard_agree_vs_numpy": 0.9905, "fails": 168, "ms": 18, "status": "ok"}
+    ],
+    "relay": [
+      {"block": 32, "deterministic": true, "agree_vs_oracle": 0.994, "fails": 39, "s": 0.44, "status": "ok"},
+      {"block": 128, "deterministic": true, "agree_vs_oracle": 0.994, "fails": 39, "s": 0.21, "status": "ok (fastest that compiles)"},
+      {"block": 256, "status": "REFUSED", "error": "MetalNonRecoverableError: refusing to emit silently-wrong output (codegen left an unresolved value, UNKNOWN_*)"},
+      {"block": 512, "status": "REFUSED", "error": "MetalNonRecoverableError (same class)"},
+      {"block": 1024, "status": "REFUSED", "error": "MetalNonRecoverableError (same class)"}
+    ]
+  },
+  "clean_bench": {
+    "note": "warmup 3, reps 5, min/median; fails = logical failures of the timed run (2000 shots).",
+    "relay_block32": {"min_s": 0.441, "median_s": 0.444, "fails": 39},
+    "relay_block128": {"min_s": 0.202, "median_s": 0.210, "fails": 39},
+    "bp30_block32": {"min_ms": 20, "median_ms": 20, "fails": 168},
+    "bp30_block256": {"min_ms": 12, "median_ms": 13, "fails": 168}
+  },
+  "headline": {
+    "relay_lift_vs_block32": 2.18,
+    "relay_block128_vs_v01_twokernel": {"v01_s": 30.0, "mega_s": 0.202, "speedup": 148, "note": "v0.1 two-kernel Metal baseline 30.0s (+-1s jitter); was 65x at the BLOCK=32 spike (0.46s)"},
+    "bp_lift_vs_block32": 1.67,
+    "bp30_block256_vs_v01_twokernel": {"v01_ms": 178, "mega_ms": 12, "speedup": 14.8}
+  },
+  "chosen_defaults": {"bp": [256, null], "relay": [128, null]},
+  "honest_negative": "The relay megakernel still REFUSES at BLOCK>=256 on triton-metal 2026.06.13: its in-loop syndrome-convergence reduction + lowest-weight capture hit a codegen pattern the register-array spine does not yet cover. The refusal is LOUD (MetalNonRecoverableError at compile time, never silent-wrong output) -- the integrity model holding. BP, which uses the reported reduction-in-loop shape, now compiles + runs correctly at BLOCK 256-1024, confirming the spine fix landed for that shape. Reported to the triton-metal thread: tridec-bug-reports/REPLY_BLOCK_LIFT_2026-06-13.md."
+}
