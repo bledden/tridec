@@ -225,12 +225,14 @@ flips) — documented in `bench/receipts/full_grid_noregression.json`.
 
 ## Status
 
-`0.2.1` (unreleased) — **Relay-BP auto-dispatch**: `from_dem(...,
-algorithm="relay")` / `RelayBpDecoder` use the megakernel by default on GPU
-(`megakernel=False` opts back to the two-kernel host loop); GPU-gated by
-construction. `0.2.0` added the megakernel backend (tri-platform validated; see
-above). v0.1.0 shipped the two-kernel BP/Relay-BP path + the validation
-discipline. The kernels and their receipts are stable; the public API surface
+`0.2.1` — **Relay-BP auto-dispatch**: `from_dem(..., algorithm="relay")` /
+`RelayBpDecoder` use the megakernel by default on GPU (`megakernel=False` opts
+back to the two-kernel host loop); GPU-gated by construction. Validated on all
+three platforms — Metal (M4 Max), NVIDIA H200 (CUDA), AMD MI300X (ROCm/gfx942).
+Also: the statistical-tier validation gates now use a sample-size-aware
+Wilson-CI overlap test (#1). `0.2.0` added the megakernel backend (tri-platform
+validated; see above). v0.1.0 shipped the two-kernel BP/Relay-BP path + the
+validation discipline. The kernels and their receipts are stable; the public API surface
 is young and may still move before 1.0 — minor `0.x` releases may rename or
 remove public API; `1.0` will lock the surface. GPU paths require triton
 + a CUDA/ROCm GPU (or the experimental triton-metal environment); the

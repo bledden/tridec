@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 — 2026-06-14
+
+*Validated on all three platforms: Metal (M4 Max), NVIDIA H200 (CUDA), and AMD
+MI300X (ROCm/gfx942). The CUDA/ROCm kernels are byte-identical to 0.2.0 (the
+megakernel lift is Metal-only and auto-dispatch is routing), so the 0.2.0
+performance receipts stand; re-confirmed no regression on H200/MI300X.*
 
 **Statistical-tier gate uses Wilson-CI overlap (#1).** The cross-decoder /
 cross-platform / vs-oracle gates (where exact failure counts can't match by

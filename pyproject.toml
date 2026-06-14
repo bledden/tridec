@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tridec"
-version = "0.2.0"
-description = "Vendor-portable GPU decoders for quantum LDPC codes: Triton min-sum BP and Relay-BP on NVIDIA (CUDA) and AMD (ROCm), with CPU reference implementations, consuming any stim DetectorErrorModel or raw parity-check matrices."
+version = "0.2.1"
+description = "Vendor-portable GPU decoders for quantum LDPC codes: Triton min-sum BP and Relay-BP on NVIDIA (CUDA), AMD (ROCm), and experimental Apple-silicon (Metal), with CPU reference implementations, consuming any stim DetectorErrorModel or raw parity-check matrices."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
