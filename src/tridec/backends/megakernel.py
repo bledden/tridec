@@ -4,14 +4,17 @@ ONE kernel launch per ``decode_batch`` instead of 2 launches x iterations
 x relay legs (thousands of launches; measured launch-bound on Metal:
 ~31 s launches vs ~1.3 s math for the canonical 2000-shot relay cell).
 
-STATUS: opt-in. These classes are validated + receipted but are NOT yet the
-default returned by ``tridec.from_dem`` / ``RelayBpDecoder`` (which still use
-the two-kernel ``relay_triton`` / ``bp_triton`` path). Auto-dispatch lands in
-v0.2.1 once the public-API path is gated on a GPU:
-https://github.com/bledden/tridec/issues/5
-Use ``BpMegaTriton`` for low-latency single-shot bare BP (the plain-BP
-megakernel loses to the two-kernel path at large batch); ``RelayBpMegaTriton``
-for the accurate latency path (9-22x over the two-kernel relay path on GPU).
+STATUS (v0.2.1): ``RelayBpMegaTriton`` is now the DEFAULT Relay-BP impl behind
+``tridec.from_dem(..., algorithm="relay")`` / ``RelayBpDecoder`` on GPU
+(``megakernel=True`` default; pass ``megakernel=False`` for the v0.1 two-kernel
+``relay_triton`` host loop). The dispatch is GPU-gated by construction --
+``RelayBpDecoder`` only accepts the ``triton`` (CUDA/ROCm) and ``metal``
+backends -- so the megakernel is never built on CPU. ``BpMegaTriton`` stays
+OPT-IN: the plain-BP megakernel is a single-shot *latency* tool that loses to
+the two-kernel ``bp_triton`` path at batch, so ``BpDecoder`` keeps the
+two-kernel default. Use ``RelayBpMegaTriton`` for the accurate latency path
+(9-32x over the two-kernel relay path on CUDA/ROCm, ~197x on Metal).
+See https://github.com/bledden/tridec/issues/5.
 
 DESIGN -- "shot-per-program", Plan A of issue #2.
 =================================================

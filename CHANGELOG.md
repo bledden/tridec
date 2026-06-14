@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+**Relay-BP auto-dispatch (#5).** `tridec.from_dem(..., algorithm="relay")` and
+`RelayBpDecoder` now use the single-launch **megakernel by default on GPU** —
+it wins decisively on relay (9–32× on CUDA/ROCm, ~197× on Metal vs the v0.1
+two-kernel host loop, with per-shot early exit and LER matching the `relay_bp`
+oracle). Pass `megakernel=False` for the v0.1 two-kernel path. The dispatch is
+**GPU-gated by construction** — `RelayBpDecoder` only accepts the `triton`
+(CUDA/ROCm) and `metal` backends, so the megakernel is never built on CPU. The
+megakernel is a drop-in `RelayBpTriton` subclass (overrides `_relay_posteriors`
+only), so `decode_batch` and the no-observable path are unchanged. **BP keeps
+the two-kernel default** (`BpMegaTriton` stays opt-in via
+`tridec.backends.megakernel`) — the plain-BP megakernel is a single-shot
+*latency* tool that loses at batch throughput. Validated on Metal + CPU (full
+suite 99 passed / 6 skipped); CUDA/ROCm dispatch is a pre-publish confirmation
+(the megakernel's kernel correctness there is already receipted).
+
 **Metal megakernel fully lifted off the `BLOCK=32` pin — both kernels at
 `BLOCK=256`.** The `triton-metal` codegen gaps that forced `BLOCK=32` in 0.2.0
 (silently-dropped `tl.debug_barrier`; cross-lane reduction-in-loop) are fixed

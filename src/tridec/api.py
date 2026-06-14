@@ -298,7 +298,8 @@ class RelayBpDecoder:
     algorithm = "relay"
 
     def __init__(self, H, priors, observables=None, backend="auto", device=None,
-                 block_s=256, dtype=None, dem=None, **relay_params):
+                 block_s=256, dtype=None, dem=None, megakernel=True,
+                 **relay_params):
         resolved = resolve_backend(backend)
         if resolved not in ("triton", "metal"):
             raise NotImplementedError(
@@ -324,9 +325,25 @@ class RelayBpDecoder:
 
         cfg = dict(_RELAY_DEFAULTS)
         cfg.update(relay_params)
-        from .backends.relay_triton import RelayBpTriton
-        self._impl = RelayBpTriton(H, priors, block_s=block_s, dtype=dtype,
-                                   **cfg)
+        # v0.2.1 auto-dispatch: the single-launch megakernel is the default
+        # Relay-BP impl on GPU (it WINS on relay -- 9-32x on CUDA/ROCm, ~197x
+        # on Metal vs the v0.1 two-kernel host loop -- with per-shot early exit
+        # and LER matching the relay_bp oracle). It is a drop-in subclass of
+        # RelayBpTriton (overrides _relay_posteriors only), so decode_batch and
+        # the no-observable path are unchanged. This path is GPU-gated by
+        # construction: RelayBpDecoder already rejects non-(triton|metal)
+        # backends above, so the megakernel is only ever built on a GPU. Set
+        # ``megakernel=False`` for the v0.1 two-kernel host loop. (BP keeps the
+        # two-kernel default -- the plain-BP megakernel loses at batch.)
+        self.megakernel = bool(megakernel)
+        if self.megakernel:
+            from .backends.megakernel import RelayBpMegaTriton
+            self._impl = RelayBpMegaTriton(H, priors, block_s=block_s,
+                                           dtype=dtype, **cfg)
+        else:
+            from .backends.relay_triton import RelayBpTriton
+            self._impl = RelayBpTriton(H, priors, block_s=block_s, dtype=dtype,
+                                       **cfg)
 
         Lo = _dense_uint8(observables)
         self._Lo = Lo
@@ -337,11 +354,12 @@ class RelayBpDecoder:
         self.n_bits = self._impl.n_bits
         self.n_checks = self._impl.n_checks
 
-        self.name = f"portable-relay-bp[{self.backend}]"
+        impl = "megakernel" if self.megakernel else "two-kernel"
+        self.name = f"portable-relay-bp[{self.backend},{impl}]"
         self.tie_break = "relay_bp_nconv_disjoint_ensemble"
         self.config = dict(
             decoder="tridec.RelayBpDecoder", backend=self.backend,
-            dtype=dtype, **cfg)
+            impl=impl, dtype=dtype, **cfg)
 
     @classmethod
     def from_dem(cls, dem, backend="auto", device=None, **opts):

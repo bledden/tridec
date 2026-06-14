@@ -153,6 +153,22 @@ def test_relay_defaults_to_fp32_on_metal(bb_dem_shots):
     assert dec.config["dtype"] == "float32"
 
 
+def test_relay_auto_dispatches_to_megakernel(bb_dem_shots):
+    """v0.2.1 #5: relay defaults to the single-launch megakernel on GPU;
+    ``megakernel=False`` opts back to the two-kernel host loop."""
+    from tridec.backends.megakernel import RelayBpMegaTriton
+    from tridec.backends.relay_triton import RelayBpTriton
+    dem, _, _ = bb_dem_shots
+    default = tridec.from_dem(dem, algorithm="relay", backend="metal")
+    assert isinstance(default._impl, RelayBpMegaTriton)
+    assert default.config["impl"] == "megakernel"
+    twok = tridec.from_dem(dem, algorithm="relay", backend="metal",
+                           megakernel=False)
+    assert isinstance(twok._impl, RelayBpTriton)
+    assert not isinstance(twok._impl, RelayBpMegaTriton)
+    assert twok.config["impl"] == "two-kernel"
+
+
 def test_relay_full_ler_vs_oracle(bb_dem_shots):
     """The spike-level relay gate: LER-identity with the relay_bp Rust oracle
     (fp32 Metal kernels; gamma RNGs differ by construction). ~30 s on M4 Max

@@ -47,9 +47,13 @@ Metal 30.0 s baseline and the v0.1 Apple section's 31 s below are independent
 measurement runs of the same two-kernel relay (run-to-run jitter), not a
 discrepancy.*
 
-Opt-in today via `tridec.backends.megakernel.{RelayBpMegaTriton, BpMegaTriton}`;
-**auto-dispatch from `from_dem(..., backend="auto")` lands in v0.2.1** once the
-public-API path is gated on a GPU
+**Auto-dispatch (v0.2.1):** `tridec.from_dem(..., algorithm="relay")` /
+`RelayBpDecoder` now use the **megakernel by default on GPU** — relay wins
+decisively, so it's the default; pass `megakernel=False` for the v0.1 two-kernel
+host loop. The path is GPU-gated by construction (`RelayBpDecoder` only accepts
+the `triton`/`metal` backends, never CPU). **BP keeps the two-kernel default**
+(`BpMegaTriton` stays opt-in via `tridec.backends.megakernel` — the plain-BP
+megakernel is a single-shot latency tool that loses at batch throughput).
 ([#5](https://github.com/bledden/tridec/issues/5)). Receipts:
 `bench/receipts/megakernel_{h200,mi300x,metal}*`.
 
@@ -221,14 +225,14 @@ flips) — documented in `bench/receipts/full_grid_noregression.json`.
 
 ## Status
 
-`0.2.0` — adds the opt-in megakernel backend (tri-platform validated; see
+`0.2.1` (unreleased) — **Relay-BP auto-dispatch**: `from_dem(...,
+algorithm="relay")` / `RelayBpDecoder` use the megakernel by default on GPU
+(`megakernel=False` opts back to the two-kernel host loop); GPU-gated by
+construction. `0.2.0` added the megakernel backend (tri-platform validated; see
 above). v0.1.0 shipped the two-kernel BP/Relay-BP path + the validation
 discipline. The kernels and their receipts are stable; the public API surface
 is young and may still move before 1.0 — minor `0.x` releases may rename or
-remove public API; `1.0` will lock the surface. **Next (`v0.2.1`):
-megakernel auto-dispatch from `from_dem(..., backend="auto")`, gated on the
-public-API path running on a GPU
-([#5](https://github.com/bledden/tridec/issues/5)).** GPU paths require triton
+remove public API; `1.0` will lock the surface. GPU paths require triton
 + a CUDA/ROCm GPU (or the experimental triton-metal environment); the
 GPU/metal test tiers skip cleanly where unavailable.
 
