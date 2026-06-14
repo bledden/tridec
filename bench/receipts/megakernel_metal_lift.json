@@ -1,7 +1,7 @@
 {
   "meta": {
-    "STATUS": "BLOCK-LIFT follow-up to megakernel_metal_spike (2026-06-10). triton-metal CODEGEN_VERSION 2026.06.13 honors tl.debug_barrier (Bug 1) and fixed cross-lane-reduction-in-loop for the BP-megakernel shape (Bug 2), so the Metal BLOCK=32 pin is LIFTED: BP->256, relay->128. The relay megakernel still REFUSES at BLOCK>=256 (loud MetalNonRecoverableError, never silent-wrong). fp32, CPU(UMA) tensors, device='cpu'.",
-    "date": "2026-06-13",
+    "STATUS": "BLOCK-LIFT, FINAL (updated 2026-06-14). triton-metal honors tl.debug_barrier (Bug 1) + fixed in-loop reductions, so the Metal BLOCK=32 pin is FULLY LIFTED: BOTH kernels at BLOCK=256 -- BP (256, None), relay (256, num_warps=8). The relay num_warps=8 is load-bearing: num_threads=num_warps*32=256=BLOCK gives n=BLOCK/num_threads=1 element/thread; at n>1 triton-metal's base path under-covers a BLOCK-wide store -- now a LOUD MetalNonRecoverableError (triton-metal b82136b, never silent-wrong). Verified against the triton-metal B/C/A branch (worktree-multi-element-per-thread @ b82136b, CODEGEN 2026.06.13.1): relay (256,8) deterministic + bit-identical to BLOCK=128 + LER-matches the relay-bp oracle; test_megakernel_metal.py 4/4 PASS at the new defaults. NOTE: requires triton-metal >= b82136b; on older triton-metal relay@256 LOUDLY REFUSES (safe). [Earlier 2026-06-13 sections below documented the interim relay=128 state, when relay@256 still refused.] fp32, CPU(UMA) tensors, device='cpu'.",
+    "date": "2026-06-14",
     "supersedes_config_in": "megakernel_metal_spike.{md,json} (which used BLOCK=32 throughout)",
     "platform": {"system": "darwin", "machine": "arm64", "python": "3.14.4", "device": "Apple M4 Max"},
     "versions": {
@@ -46,6 +46,19 @@
     "bp_lift_vs_block32": 1.67,
     "bp30_block256_vs_v01_twokernel": {"v01_ms": 178, "mega_ms": 12, "speedup": 14.8}
   },
-  "chosen_defaults": {"bp": [256, null], "relay": [128, null]},
-  "honest_negative": "The relay megakernel still REFUSES at BLOCK>=256 on triton-metal 2026.06.13: its in-loop syndrome-convergence reduction + lowest-weight capture hit a codegen pattern the register-array spine does not yet cover. The refusal is LOUD (MetalNonRecoverableError at compile time, never silent-wrong output) -- the integrity model holding. BP, which uses the reported reduction-in-loop shape, now compiles + runs correctly at BLOCK 256-1024, confirming the spine fix landed for that shape. Reported to the triton-metal thread: tridec-bug-reports/REPLY_BLOCK_LIFT_2026-06-13.md."
+  "relay_full_lift_2026-06-14": {
+    "note": "FINAL relay lift to BLOCK=256 via num_warps=block/32 (n=1). Verified against triton-metal B/C/A branch @ b82136b. warmup 3 reps 5, min/median ms; all configs 39 fails = matches relay-bp oracle (35) within bar + bit-identical predictions to BLOCK=128.",
+    "configs": [
+      {"block": 128, "num_warps": 4, "n": 1, "min_ms": 202.2, "median_ms": 204.5, "fails": 39, "det": true, "note": "prior default"},
+      {"block": 256, "num_warps": 8, "n": 1, "min_ms": 152.5, "median_ms": 153.3, "fails": 39, "det": true, "bit_identical_to_128": true, "note": "CHOSEN (fastest)"},
+      {"block": 512, "num_warps": 16, "n": 1, "min_ms": 178.2, "median_ms": 179.5, "fails": 39, "det": true, "bit_identical_to_128": true},
+      {"block": 1024, "num_warps": 32, "n": 1, "min_ms": 247.6, "median_ms": 248.7, "fails": 39, "det": true, "bit_identical_to_128": true},
+      {"block": 256, "num_warps": 4, "n": 2, "status": "REFUSED", "error": "MetalNonRecoverableError: Refusing a 256-element tensor store with only 128 threads ... launch with num_warps = BLOCK/32"}
+    ],
+    "headline_relay_256x8": {"v01_s": 30.0, "mega_s": 0.1525, "speedup_vs_v01": 197, "vs_block32": 2.89, "vs_block128": 1.33},
+    "gate": "tests/test_megakernel_metal.py 4/4 PASS at relay=(256,8) against b82136b"
+  },
+  "chosen_defaults": {"bp": [256, null], "relay": [256, 8]},
+  "requires": "relay BLOCK=256 requires triton-metal >= b82136b (B/C/A: barriers + in-loop reduction + n=1 base-path-store refusal). On older triton-metal, relay@256 LOUDLY REFUSES (safe, never silent-wrong).",
+  "history": "The 2026-06-13 sections above documented an interim state: relay was pinned to BLOCK=128 because relay@256 REFUSED (in-loop reduction unsupported). The B/C/A branch fixed that; relay@256 is now correct at n=1. A regression was caught + fixed mid-flight: an intermediate B/C/A build made relay@256 SILENT-WRONG + racy at n=2 (num_warps=4); root-caused to base-path n>1 under-coverage, fixed by num_warps=block/32 + a loud refusal (b82136b). Full trail: tridec-bug-reports/REPLY_RELAY_BISECTION_2026-06-14.md."
 }

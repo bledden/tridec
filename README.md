@@ -33,7 +33,7 @@ verified honored on both):
 
 | Relay-BP megakernel vs v0.1 two-kernel | speedup |
 |---|---|
-| Apple M4 Max (Metal, triton-metal) | **~148×** — 30.0 s → 0.202 s / 2000 shots (relay BLOCK=128) |
+| Apple M4 Max (Metal, triton-metal) | **~197×** — 30.0 s → 0.152 s / 2000 shots (relay BLOCK=256, num_warps=8) |
 | NVIDIA H200 (CUDA) | **9–19×** fp32 (fp64 to 37× mid-batch) — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
 | AMD MI300X (ROCm) | **9–32×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
 
@@ -70,16 +70,16 @@ public-API path is gated on a GPU
   H200, MI300X and M4 Max, pinned in `_CUDA_TUNED` keyed by
   `gcnArchName`/device name. AMD (wavefront-64) wants the *opposite* shape from
   NVIDIA warps — low warps for BP, max BLOCK+warps for relay.
-- **Metal: lifted off the old BLOCK=32 pin** (triton-metal CODEGEN_VERSION
-  2026.06.13 honors `tl.debug_barrier` and fixed reduction-in-loop for the BP
-  shape). Metal now runs **BP at BLOCK=256** (20 → 12 ms, 1.67×) and **relay at
-  BLOCK=128** (441 → 202 ms, 2.18× — the ~148× headline above). *Honest
-  negative:* the relay megakernel still **refuses at BLOCK≥256** —
-  `MetalNonRecoverableError` at compile time, a **loud refusal, never
-  silent-wrong** — because its in-loop convergence-reduction + lowest-weight
-  pass hits a codegen pattern triton-metal's register-array spine doesn't yet
-  cover (reported upstream). BP, using the simpler reported shape, runs at
-  256–1024. fp32-only on Metal (no fp64), same as the two-kernel path, and the
+- **Metal: fully lifted off the old BLOCK=32 pin** — both kernels at
+  **BLOCK=256**: BP `(256)` (20 → 12 ms, 1.67×) and relay `(256, num_warps=8)`
+  (441 → 152 ms, **2.89×** — the ~197× headline above), relay bit-identical to
+  BLOCK=128. The relay `num_warps=8` is load-bearing: it sets `num_threads =
+  num_warps×32 = 256 = BLOCK` so each thread handles exactly one element
+  (`n = BLOCK/num_threads = 1`); at `n>1` triton-metal's base path under-covers a
+  BLOCK-wide store and now **loudly refuses** (`MetalNonRecoverableError`, never
+  silent-wrong), so the footgun can't bite. Requires triton-metal with the
+  in-loop-reduction + `n=1`-store fixes (older triton-metal loudly refuses
+  relay@256). fp32-only on Metal (no fp64), same as the two-kernel path, and the
   fp32 near-tie-flip caveat below applies to the megakernel unchanged. Receipt:
   `bench/receipts/megakernel_metal_lift.md`.
 
@@ -152,8 +152,8 @@ oracle for the Triton path.
 
 *This table covers the **two-kernel** BP/Relay-BP path (v0.1). The v0.2
 **megakernel**'s own per-platform validation (14/14 gates on CUDA + ROCm,
-~148× on Metal at the lifted BP=256/relay=128 blocks) is in the
-[megakernel section](#v02-the-megakernel-backend-opt-in) above, with raw
+~197× on Metal at the lifted BLOCK=256 blocks — BP `(256)`, relay `(256,8)`) is
+in the [megakernel section](#v02-the-megakernel-backend-opt-in) above, with raw
 receipts in `bench/receipts/megakernel_*`.*
 
 ## Experimental: Apple silicon (Metal)

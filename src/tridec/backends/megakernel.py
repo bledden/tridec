@@ -59,16 +59,19 @@ TRITON-METAL CODEGEN STATUS (triton-metal CODEGEN_VERSION 2026.06.13;
 see bench/receipts/megakernel_metal_spike.md)
 ----------------------------------------------------------
   * Cross-lane reductions (``tl.sum``) INSIDE dynamic loops: the
-    register-array spine FIXED this for the BP-megakernel shape -- the BP
-    megakernel now compiles + runs correctly at BLOCK 256-1024 (was capped
-    at 128; previously emitted undeclared ``UNKNOWN_<addr>`` identifiers).
-    The RELAY megakernel still REFUSES at BLOCK >= 256 with a
-    ``MetalNonRecoverableError`` ("refusing to emit silently-wrong output"):
-    its in-loop syndrome-convergence reduction + lowest-weight capture hit a
-    pattern the spine does not yet cover. Crucially this is a LOUD refusal at
-    compile time -- never silently-wrong output. So Metal uses block=256 for
-    BP and block=128 for relay (``_tuned_config``); both are verified
-    deterministic + correct at those sizes (gates below).
+    register-array spine FIXED this -- both kernels compile + run correctly at
+    BLOCK 256-1024 (was capped at 128; previously emitted undeclared
+    ``UNKNOWN_<addr>`` identifiers). So Metal now uses BLOCK=256 for BOTH BP
+    (256, None) and relay (256, 8) (``_tuned_config``); both verified
+    deterministic + correct (gates below), relay bit-identical to BLOCK=128.
+  * ``n = BLOCK / num_threads`` (num_threads = num_warps*32) MUST be 1 for the
+    relay kernel on Metal. triton-metal's base path emits general element-wise
+    loads/stores as one-element-per-thread, so at n>1 it silently under-covers
+    a BLOCK-wide store -- now a LOUD ``MetalNonRecoverableError`` (triton-metal
+    b82136b; never silent-wrong). Hence relay pins ``num_warps = BLOCK/32`` (=8
+    at 256) so num_threads == BLOCK == n=1. BP carries no in-loop reduction so
+    it is register-array-eligible (the n>1 single-pass regime covers it) and
+    leaves num_warps default; worst case it degrades to the same loud refusal.
   * The kernels use NO ``while`` loops and NO scalar-``if`` assignment
     blocks (a ``while``-carried variable assigned inside a scalar ``if`` once
     miscompiled silently on triton-metal). This structure is retained: the
@@ -95,13 +98,14 @@ is now HONORED on Metal. Earlier triton-metal silently dropped it (triton 3.7
 emits ``ttg.barrier all`` in TTGIR; the pre-fix lowerer only recognized the
 pre-3.5 ``tt.debug_barrier`` spelling and skipped unknown ops), which forced
 the Metal config to ``block=32`` (one 32-wide SIMD-group runs in lockstep, so
-the dropped barriers were not needed for correctness). With barriers honored,
-the BLOCK=32 pin is LIFTED: Metal now uses block=256 (BP) / block=128 (relay).
-Verified on Metal at the lifted blocks -- BP posteriors bit-identical to the
-two-kernel ``BpTriton`` path, relay LER matching the ``relay-bp`` oracle, and
-both deterministic run-to-run (the load-bearing barrier-honored gate; was
-~0.80 posterior agreement when the barriers were dropped). See
-tests/test_megakernel_metal.py + bench/receipts/megakernel_metal_spike.md.
+the dropped barriers were not needed for correctness). With barriers honored
+(and the in-loop-reduction + n=1 fixes above), the BLOCK=32 pin is fully
+LIFTED: Metal now uses block=256 for BOTH kernels -- BP (256, None), relay
+(256, num_warps=8). Verified on Metal -- BP posteriors bit-identical to the
+two-kernel ``BpTriton`` path, relay predictions bit-identical to BLOCK=128 and
+LER matching the ``relay-bp`` oracle, both deterministic run-to-run (the
+load-bearing gate; was ~0.80 posterior agreement when barriers were dropped).
+See tests/test_megakernel_metal.py + bench/receipts/megakernel_metal_lift.md.
 """
 import numpy as np
 import torch
@@ -155,19 +159,23 @@ _CUDA_TUNED = {
 
 def _tuned_config(kind):
     """(block, num_warps) for this device and kernel ``kind`` ("bp" or
-    "relay"). On the triton-metal environment (CODEGEN_VERSION 2026.06.13,
-    barriers honored + reduction-in-loop fixed for the BP shape): bp=(256,
-    None), relay=(128, None) -- lifted off the old BLOCK=32 pin. num_warps is
-    not passed on Metal. Verified on M4 Max, 2000-shot BB cell: BP runs
-    deterministically + correctly at BLOCK 256-1024 (256 fastest, 20->12 ms,
-    1.67x); relay runs at BLOCK 128 (441->202 ms, 2.18x) but still REFUSES at
-    BLOCK>=256 with MetalNonRecoverableError (its in-loop convergence-reduction
-    + lowest-weight pass hits a codegen pattern the register-array spine does
-    not yet cover -- loud, never silent-wrong). See module docstring +
-    bench/receipts/megakernel_metal_spike.md. On CUDA/ROCm: the autotuned
-    per-arch table above, default (128, 4)."""
+    "relay"). On the triton-metal environment: bp=(256, None), relay=(256, 8)
+    -- both at BLOCK=256, fully lifted off the old BLOCK=32 pin. The relay
+    ``num_warps=8`` is load-bearing: it sets num_threads = num_warps*32 = 256 =
+    BLOCK so each thread handles exactly ONE element (n = BLOCK/num_threads = 1).
+    At n>1 (e.g. BLOCK=256 with the default 4 warps = 128 threads) triton-metal's
+    base path under-covers general element-wise stores -- now a LOUD
+    MetalNonRecoverableError (refuses, never silent-wrong; triton-metal commit
+    b82136b), so the n>1 footgun cannot bite silently. BP stays num_warps=None
+    (it is register-array-eligible -- no in-loop reduction -- so the n>1
+    single-pass regime covers it; worst case it degrades to the same loud
+    refusal). Verified M4 Max, 2000-shot BB cell, vs the relay-bp oracle +
+    bit-identical to BLOCK=128: relay (256,8) 152 ms (2.89x over the BLOCK=32
+    pin, ~197x over v0.1 two-kernel); BP (256) 12 ms. (256,8) beat (512,16)
+    178 ms / (1024,32) 248 ms. See bench/receipts/megakernel_metal_lift.md.
+    On CUDA/ROCm: the autotuned per-arch table above, default (128, 4)."""
     if _is_metal_env():
-        return (256, None) if kind == "bp" else (128, None)
+        return (256, None) if kind == "bp" else (256, 8)
     if torch.cuda.is_available():
         try:
             name = torch.cuda.get_device_name(0)

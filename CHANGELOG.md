@@ -2,22 +2,26 @@
 
 ## Unreleased
 
-**Metal megakernel lifted off the `BLOCK=32` pin.** The two `triton-metal`
-codegen gaps that forced `BLOCK=32` in 0.2.0 (silently-dropped
-`tl.debug_barrier`; cross-lane reduction-in-loop miscompiling at `BLOCK≥256`)
-are fixed upstream (CODEGEN_VERSION 2026.06.13). Metal now runs **BP at
-`BLOCK=256`** (20 → 12 ms, 1.67×) and **relay at `BLOCK=128`** (441 → 202 ms,
-2.18×), lifting the Metal relay headline from **65× → ~148×** vs the v0.1
-two-kernel path (30.0 s → 0.202 s / 2000 shots). Re-validated: all 4 Metal
-gates pass at the lifted defaults (BP bit-identity vs two-kernel, relay
-LER-vs-oracle, run-twice determinism — the barrier-honored gate).
+**Metal megakernel fully lifted off the `BLOCK=32` pin — both kernels at
+`BLOCK=256`.** The `triton-metal` codegen gaps that forced `BLOCK=32` in 0.2.0
+(silently-dropped `tl.debug_barrier`; cross-lane reduction-in-loop) are fixed
+upstream. Metal now runs **BP at `(256)`** (20 → 12 ms, 1.67×) and **relay at
+`(256, num_warps=8)`** (441 → 152 ms, **2.89×**), lifting the Metal relay
+headline from **65× → ~197×** vs the v0.1 two-kernel path (30.0 s → 0.152 s /
+2000 shots), relay bit-identical to `BLOCK=128`. The relay `num_warps=8` sets
+`num_threads = 256 = BLOCK` so each thread handles one element (`n=1`); at `n>1`
+triton-metal's base path under-covers a BLOCK-wide store and now **loudly
+refuses** (`MetalNonRecoverableError`, never silent-wrong). All 4 Metal gates
+pass at the new defaults; relay validated deterministic + bit-identical to
+`BLOCK=128` + LER-vs-oracle over repeated runs. Requires triton-metal with the
+in-loop-reduction + `n=1`-store fixes (older → relay@256 loudly refuses).
+Receipt: `bench/receipts/megakernel_metal_lift.{md,json}`.
 
-*One honest negative:* the **relay megakernel still refuses at `BLOCK≥256`** —
-`MetalNonRecoverableError` at compile time (a **loud refusal, never
-silent-wrong**), because its in-loop convergence-reduction + lowest-weight pass
-hits a pattern triton-metal's register-array spine doesn't yet cover. BP, using
-the simpler reported shape, runs at 256–1024. Reported upstream. Receipt:
-`bench/receipts/megakernel_metal_lift.{md,json}`.
+*Process note:* an intermediate upstream build made relay@256 silently-wrong +
+racy (base-path `n>1` under-coverage); caught by tridec's repeated-run
+determinism gate, root-caused, and resolved with `num_warps=block/32` + a loud
+upstream refusal before any lift shipped (the kernel never produced wrong output
+through the default path).
 
 ## 0.2.0 — 2026-06-11
 
