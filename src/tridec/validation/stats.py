@@ -16,6 +16,22 @@ def wilson_ci(f, n, z=1.96):
     return ((c - h)/d, (c + h)/d)
 
 
+def wilson_consistent(f1, n1, f2, n2, z=1.96):
+    """Two binomial rates are statistically consistent iff their Wilson score
+    intervals overlap.
+
+    The principled "statistical tier" gate for comparisons where exact failure
+    counts cannot match by construction -- cross-decoder, cross-platform (stim's
+    seeded sampler is platform-dependent), or vs the relay_bp Rust oracle (its
+    gamma RNG is not pinned). Sample-size-aware: it tightens automatically as N
+    grows, unlike an ad-hoc ``abs(diff) <= k%`` bar (too loose at high N / high
+    LER, too strict at low counts). Default ``z=1.96`` == 95%.
+    """
+    lo1, hi1 = wilson_ci(f1, n1, z)
+    lo2, hi2 = wilson_ci(f2, n2, z)
+    return lo1 <= hi2 and lo2 <= hi1
+
+
 def _two_prop(f1, n1, f2, n2):
     p1, p2 = f1/n1, f2/n2
     se = math.sqrt(p1*(1-p1)/n1 + p2*(1-p2)/n2) or 1e-12

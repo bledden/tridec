@@ -31,6 +31,7 @@ from conftest import load_bb_circuit, load_surface_circuit
 
 import tridec
 from tridec import available_backends, resolve_backend
+from tridec.validation import wilson_ci, wilson_consistent
 from tridec.backends.bp_numpy import BpBaseline
 
 MS = 0.625
@@ -198,6 +199,8 @@ def test_relay_full_ler_vs_oracle(bb_dem_shots):
     per_shot = float(np.all(pred_mtl == pred_ref, axis=1).mean())
     print(f"\nMETAL RELAY LER-IDENTITY: oracle={fails_ref} metal={fails_mtl} "
           f"(N={len(dets)}) per-shot-agreement={per_shot:.4f}")
-    assert abs(fails_mtl - fails_ref) <= max(5, int(0.01 * len(dets))), (
-        f"relay LER differs too much: oracle={fails_ref} metal={fails_mtl}")
+    assert wilson_consistent(fails_mtl, len(dets), fails_ref, len(dets)), (
+        f"statistical tier: metal relay fails={fails_mtl} "
+        f"CI={wilson_ci(fails_mtl, len(dets))} vs oracle fails={fails_ref} "
+        f"CI={wilson_ci(fails_ref, len(dets))} — disjoint 95% Wilson CIs")
     assert per_shot >= 0.99

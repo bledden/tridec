@@ -12,7 +12,7 @@ from conftest import load_surface_circuit
 
 from tridec.backends.bp_numpy import BpBaseline
 from tridec.dem import extract
-from tridec.validation import wilson_ci
+from tridec.validation import wilson_ci, wilson_consistent
 
 MS = 0.625  # normalized min-sum scaling factor (the validated default)
 
@@ -135,13 +135,13 @@ def test_ler_matches_ldpc_bp_within_ci(surface_dem_shots):
         if not np.array_equal(p.astype(bool), obs[i]):
             fails_ldpc += 1
 
-    lo_o, hi_o = wilson_ci(fails_ours, SHOTS)
-    lo_l, hi_l = wilson_ci(fails_ldpc, SHOTS)
-    assert lo_o <= hi_l and lo_l <= hi_o, (
-        f"CIs disjoint: ours fails={fails_ours} CI=({lo_o:.4f},{hi_o:.4f}) "
-        f"vs ldpc fails={fails_ldpc} CI=({lo_l:.4f},{hi_l:.4f})")
-    assert abs(fails_ours - fails_ldpc) <= max(5, int(0.05 * max(fails_ldpc, 1))), (
-        f"fail counts diverge: ours={fails_ours} ldpc={fails_ldpc}")
+    # Statistical tier (issue #1): different decoder implementations cannot
+    # match exact counts (ties / early-stop diverge), so the gate is overlapping
+    # 95% Wilson CIs, not an ad-hoc count bar.
+    assert wilson_consistent(fails_ours, SHOTS, fails_ldpc, SHOTS), (
+        f"statistical tier: ours fails={fails_ours} CI={wilson_ci(fails_ours, SHOTS)} "
+        f"vs ldpc fails={fails_ldpc} CI={wilson_ci(fails_ldpc, SHOTS)} "
+        f"(N={SHOTS}) — disjoint 95% Wilson CIs")
 
 
 def test_better_than_chance(surface_dem_shots):

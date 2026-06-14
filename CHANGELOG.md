@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+**Statistical-tier gate uses Wilson-CI overlap (#1).** The cross-decoder /
+cross-platform / vs-oracle gates (where exact failure counts can't match by
+construction) now assert a single sample-size-aware
+`validation.wilson_consistent(f1, n1, f2, n2)` (two rates consistent iff their
+95% Wilson score intervals overlap), replacing the ad-hoc `abs(diff) <= max(5,
+5%)` count bars — too loose at high N/LER, too strict at low counts. New helper
++ unit test; applied across the numpy-vs-ldpc, no-regression statistical tier,
+and relay-vs-`relay_bp`-oracle gates (metal/CUDA/ROCm). The fp32-near-tie-flip
+bars (same-algo, ≈0 flips) are intentionally left as tight absolute tolerances.
+
 **Relay-BP auto-dispatch (#5).** `tridec.from_dem(..., algorithm="relay")` and
 `RelayBpDecoder` now use the single-launch **megakernel by default on GPU** —
 it wins decisively on relay (9–32× on CUDA/ROCm, ~197× on Metal vs the v0.1

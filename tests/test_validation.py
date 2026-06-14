@@ -15,6 +15,7 @@ from tridec.validation import (
     run_matched,
     tost_equivalent,
     wilson_ci,
+    wilson_consistent,
 )
 
 
@@ -106,6 +107,22 @@ def test_wilson_ci_basics():
     lo, hi = wilson_ci(500, 1000)
     assert lo < 0.5 < hi
     assert wilson_ci(0, 0) == (0.0, 1.0)
+
+
+def test_wilson_consistent():
+    # Close rates at the same N: CIs overlap -> consistent (the relay-vs-oracle
+    # regime: 39 vs 35 / 2000).
+    assert wilson_consistent(39, 2000, 35, 2000) is True
+    assert wilson_consistent(168, 2000, 168, 2000) is True
+    # Far-apart rates: CIs disjoint -> inconsistent (bare-BP vs a good decoder).
+    assert wilson_consistent(700, 2000, 39, 2000) is False
+    # Sample-size-aware: the SAME absolute gap is tolerated at small N but not
+    # at large N (this is the whole point vs an ad-hoc count bar).
+    assert wilson_consistent(8, 200, 2, 200) is True          # small N, overlap
+    assert wilson_consistent(800, 20000, 200, 20000) is False  # large N, disjoint
+    # Symmetric in argument order.
+    assert (wilson_consistent(39, 2000, 35, 2000)
+            == wilson_consistent(35, 2000, 39, 2000))
 
 
 def test_tost_equivalent_identical_rates():

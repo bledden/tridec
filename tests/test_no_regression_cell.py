@@ -17,11 +17,13 @@ The exact-count claim is pinned to the receipt's FULL environment:
   * darwin/arm64 — the platform the grid ran on.
 On any other environment the gate runs in STATISTICAL tier instead: the same
 matched protocol on the platform-local sample stream must land within
-overlapping 95% Wilson CIs (and 5% count tolerance) of the pinned counts —
-the counts cannot be exactly equal because the shots themselves differ.
+overlapping 95% Wilson CIs of the pinned counts — the counts cannot be exactly
+equal because the shots themselves differ. (The statistical tier is a single
+sample-size-aware Wilson-CI-overlap gate, ``validation.wilson_consistent``; the
+old ad-hoc 5%-count tolerance was dropped in #1.)
 
 The numpy-backend BP is always held to the source repo's cross-implementation
-bar (overlapping Wilson CIs + counts within 5% of the BP row): the grid's
+bar (overlapping 95% Wilson CIs of the BP row): the grid's
 "BP" row was produced by ldpc's C++ BP, which early-terminates on syndrome
 convergence, while the numpy reference always runs max_iter flooding
 iterations — they were never bit-identical in the source repo either, and
@@ -36,7 +38,7 @@ from conftest import (load_bb_circuit, load_zoo_grid, on_receipt_platform,
                       zoo_cell)
 
 import tridec
-from tridec.validation import run_matched, wilson_ci
+from tridec.validation import run_matched, wilson_ci, wilson_consistent
 
 pytest.importorskip("ldpc")
 
@@ -95,14 +97,10 @@ def _assert_count(cell, manifest, name, exact):
             f"zoo_grid={want} (shots={cell['shots']}, seed={cell['seed']})")
     else:
         shots = cell["shots"]
-        lo_o, hi_o = wilson_ci(got, shots)
-        lo_g, hi_g = wilson_ci(want, shots)
-        assert lo_o <= hi_g and lo_g <= hi_o, (
-            f"NO-REGRESSION FAIL (STATISTICAL tier): {name} fails={got} vs "
-            f"pinned {want} — disjoint 95% Wilson CIs at N={shots}")
-        assert abs(got - want) <= max(5, int(0.05 * want)), (
-            f"NO-REGRESSION FAIL (STATISTICAL tier): {name} count {got} "
-            f"diverges >5% from pinned {want}")
+        assert wilson_consistent(got, shots, want, shots), (
+            f"NO-REGRESSION FAIL (STATISTICAL tier): {name} fails={got} "
+            f"CI={wilson_ci(got, shots)} vs pinned {want} "
+            f"CI={wilson_ci(want, shots)} — disjoint 95% Wilson CIs at N={shots}")
 
 
 def test_dem_hash_matches_grid(gate_run):
@@ -128,17 +126,16 @@ def test_ldpc_bp_failure_count(gate_run):
 
 def test_numpy_bp_ci_equivalent_to_grid_bp(gate_run):
     """The numpy backend vs the grid's ldpc-BP row: the source repo's own
-    equivalence bar (overlapping Wilson CIs + counts within 5%)."""
+    equivalence bar — overlapping 95% Wilson CIs (the two were never
+    bit-identical: ldpc's C++ BP early-stops, the numpy reference floods)."""
     grid, cell, manifest, exact = gate_run
     shots = cell["shots"]
     grid_bp = _grid_rec(cell, "BP")["fails"]
     ours = next(r for r in manifest["decoders"]
                 if r["config"].get("backend") == "numpy")["fails"]
-    lo_o, hi_o = wilson_ci(ours, shots)
-    lo_g, hi_g = wilson_ci(grid_bp, shots)
     print(f"\nNUMPY-BP vs grid ldpc-BP (p={P} {BASIS}, N={shots}): "
           f"ours={ours} grid={grid_bp}")
-    assert lo_o <= hi_g and lo_g <= hi_o, (
-        f"CIs disjoint: numpy fails={ours} vs grid BP fails={grid_bp}")
-    assert abs(ours - grid_bp) <= max(5, int(0.05 * grid_bp)), (
-        f"numpy BP count {ours} diverges >5% from grid BP {grid_bp}")
+    assert wilson_consistent(ours, shots, grid_bp, shots), (
+        f"statistical tier: numpy fails={ours} CI={wilson_ci(ours, shots)} "
+        f"vs grid BP fails={grid_bp} CI={wilson_ci(grid_bp, shots)} — "
+        f"disjoint 95% Wilson CIs")

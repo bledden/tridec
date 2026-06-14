@@ -40,6 +40,7 @@ from conftest import load_bb_circuit, load_surface_circuit
 from tridec.backends.bp_triton import BpTriton
 from tridec.backends.megakernel import BpMegaTriton, RelayBpMegaTriton
 from tridec.backends.relay_triton import RelayBpTriton
+from tridec.validation import wilson_ci, wilson_consistent
 
 MS = 0.625
 DEVICE = "cpu"
@@ -143,6 +144,8 @@ def test_relay_megakernel_ler_vs_oracle(bb_dem_shots):
     per_shot = float(np.all(pred_m == pred_ref, axis=1).mean())
     print(f"\nMEGA RELAY LER-IDENTITY: oracle={fails_ref} mega={fails_m} "
           f"(N={len(dets)}) per-shot-agreement={per_shot:.4f}")
-    assert abs(fails_m - fails_ref) <= max(5, int(0.01 * len(dets))), (
-        f"relay LER differs too much: oracle={fails_ref} mega={fails_m}")
+    assert wilson_consistent(fails_m, len(dets), fails_ref, len(dets)), (
+        f"statistical tier: megakernel relay fails={fails_m} "
+        f"CI={wilson_ci(fails_m, len(dets))} vs oracle fails={fails_ref} "
+        f"CI={wilson_ci(fails_ref, len(dets))} — disjoint 95% Wilson CIs")
     assert per_shot >= 0.99

@@ -21,6 +21,7 @@ relay_bp = pytest.importorskip("relay_bp")
 from conftest import load_bb_circuit
 
 from tridec.backends.relay_triton import RelayBpTriton
+from tridec.validation import wilson_ci, wilson_consistent
 
 DEVICE = "cuda"
 BB_SHOTS = 2000
@@ -107,8 +108,10 @@ def test_full_relay_ler_identity(bb_dem_shots):
     per_shot = float(np.all(pred_trt == pred_ref, axis=1).mean())
     print(f"\nRELAY LER-IDENTITY: oracle={fails_ref} triton={fails_trt} "
           f"(N={len(dets)}) per-shot-agreement={per_shot:.4f}")
-    assert abs(fails_trt - fails_ref) <= max(5, int(0.01 * len(dets))), (
-        f"relay LER differs too much: oracle={fails_ref} triton={fails_trt}")
+    assert wilson_consistent(fails_trt, len(dets), fails_ref, len(dets)), (
+        f"statistical tier: triton relay fails={fails_trt} "
+        f"CI={wilson_ci(fails_trt, len(dets))} vs oracle fails={fails_ref} "
+        f"CI={wilson_ci(fails_ref, len(dets))} — disjoint 95% Wilson CIs")
 
 
 def test_decode_batch_shape_and_dtype(bb_dem_shots):

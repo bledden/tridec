@@ -42,6 +42,7 @@ from conftest import load_bb_circuit, load_surface_circuit
 from tridec.backends.bp_triton import BpTriton
 from tridec.backends.megakernel import BpMegaTriton, RelayBpMegaTriton
 from tridec.backends.relay_triton import RelayBpTriton
+from tridec.validation import wilson_ci, wilson_consistent
 
 MS = 0.625
 DEVICE = "cuda"
@@ -190,11 +191,13 @@ def test_relay_megakernel_ler_vs_oracle(bb_dem_shots, block, dtype):
     print(f"\nMEGA RELAY LER-IDENTITY [{dtype} BLOCK={block}]: "
           f"oracle={fails_ref} mega={fails_m} (N={len(dets)}) "
           f"per-shot-agreement={per_shot:.4f}")
-    # The GATE is the LER-count bar from test_relay_triton.py (the gamma
-    # RNGs differ from Rust by construction, so per-shot agreement is
+    # The GATE is the statistical-tier Wilson-CI overlap vs the oracle (the
+    # gamma RNGs differ from Rust by construction, so per-shot agreement is
     # statistical: the v0.1 HOST path measures 0.9900 fp32 / 0.9875 fp64 on
     # this exact cell -- bench/receipts/bench_relay_triton.json -- and the
     # megakernel reproduces those numbers). 0.98 is a sanity floor only.
-    assert abs(fails_m - fails_ref) <= max(5, int(0.01 * len(dets))), (
-        f"relay LER differs too much: oracle={fails_ref} mega={fails_m}")
+    assert wilson_consistent(fails_m, len(dets), fails_ref, len(dets)), (
+        f"statistical tier: megakernel relay fails={fails_m} "
+        f"CI={wilson_ci(fails_m, len(dets))} vs oracle fails={fails_ref} "
+        f"CI={wilson_ci(fails_ref, len(dets))} — disjoint 95% Wilson CIs")
     assert per_shot >= 0.98

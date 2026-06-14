@@ -20,6 +20,7 @@ from .stats import (
     holm_bonferroni,
     tost_equivalent,
     wilson_ci,
+    wilson_consistent,
 )
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "tie",
     "tost_equivalent",
     "wilson_ci",
+    "wilson_consistent",
 ]
