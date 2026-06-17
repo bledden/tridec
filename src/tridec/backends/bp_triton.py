@@ -76,12 +76,18 @@ if _HAVE_TRITON:
     ):
         """One check's exclude-self min-sum over a BLOCK_S tile of shots.
 
-        program_id(0) = shot-tile, program_id(1) = check. Loads the check's
-        up-to-MAXDEG_C incident mu (mask on pad), computes the two-smallest-
-        magnitude / sign-parity exclude-self min-sum, writes nu per edge.
+        Grid is 1-D, flattened as (grid_s * C,): program_id(0) decodes to a
+        (shot-tile, check) pair. Loads the check's up-to-MAXDEG_C incident mu
+        (mask on pad), computes the two-smallest-magnitude / sign-parity
+        exclude-self min-sum, writes nu per edge.
         """
-        pid_s = tl.program_id(0)
-        c = tl.program_id(1)
+        # #6: 1-D grid flatten so the check count C is not bound by the 65535
+        # grid-dim-1 limit (surface BP hit it at d>=15). grid dim 0 caps at
+        # 2^31-1. grid_s here MUST equal the launcher's triton.cdiv(S, BLOCK_S).
+        grid_s = (S + BLOCK_S - 1) // BLOCK_S
+        pid = tl.program_id(0)
+        c = pid // grid_s
+        pid_s = pid - c * grid_s
 
         s_off = pid_s * BLOCK_S + tl.arange(0, BLOCK_S)   # (BLOCK_S,)
         s_mask = s_off < S
@@ -145,10 +151,16 @@ if _HAVE_TRITON:
         """One bit's scatter+update over a BLOCK_S tile of shots.
 
         posterior = prior_llr + sum_c nu ; next mu_e = posterior - nu_e.
-        program_id(0) = shot-tile, program_id(1) = bit.
+        Grid is 1-D, flattened as (grid_s * N,): program_id(0) decodes to a
+        (shot-tile, bit) pair.
         """
-        pid_s = tl.program_id(0)
-        b = tl.program_id(1)
+        # #6: 1-D grid flatten (see _check_update_kernel) -- lifts the d>=15 wall
+        # where N=n_bits exceeded the 65535 grid-dim-1 limit. grid_s here MUST
+        # equal the launcher's triton.cdiv(S, BLOCK_S).
+        grid_s = (S + BLOCK_S - 1) // BLOCK_S
+        pid = tl.program_id(0)
+        b = pid // grid_s
+        pid_s = pid - b * grid_s
         s_off = pid_s * BLOCK_S + tl.arange(0, BLOCK_S)
         s_mask = s_off < S
 
@@ -183,7 +195,8 @@ class BpTriton:
     """
 
     def __init__(self, H, priors, max_iter=30, ms_scaling_factor=0.625,
-                 block_s=256, cuda_graph=False):
+                 block_s=256, cuda_graph="auto", cuda_graph_max_s=256,
+                 cuda_graph_cache=16):
         if sp.issparse(H):
             H = H.toarray()
         self.H = (np.asarray(H, dtype=np.uint8) % 2)
@@ -191,12 +204,27 @@ class BpTriton:
         self.max_iter = int(max_iter)
         self.ms = float(ms_scaling_factor)
         self.block_s = int(block_s)
-        # #4: opt-in CUDA-graph fast path for the launch-bound small/repeated-batch
+        # #4: CUDA-graph fast path for the launch-bound small/repeated-batch
         # regime. Captures the fixed n_iter kernel loop + Lo projection per batch
         # shape and replays it (eliminates per-launch overhead); bit-identical to
-        # the eager path. Cache keyed by batch size S; disabled automatically if
-        # capture ever fails (e.g. uncapturable driver/op).
-        self._cuda_graph = bool(cuda_graph)
+        # the eager path.
+        #   cuda_graph="auto" (default): use the graph only for small batches
+        #     (S <= cuda_graph_max_s), where launch overhead dominates and the
+        #     replay wins -- large one-off batches are already throughput-bound,
+        #     so the capture cost there is pure overhead and is skipped.
+        #   cuda_graph=True : force it for any S (a benchmarking/diagnostic knob;
+        #     on some CUDA stacks a captured large-batch graph regresses badly --
+        #     H200 forced-graph collapses to ~95ms at S>=512 from a cuBLAS-in-graph
+        #     workspace pathology -- so prefer "auto" in production).
+        #   cuda_graph=False : never.
+        # Per-shape graph cache (capped at cuda_graph_cache shapes to bound the
+        # captured-tensor memory); auto-disabled if capture ever fails.
+        if cuda_graph not in (True, False, "auto"):
+            raise ValueError("cuda_graph must be True, False, or 'auto'")
+        self._cuda_graph_mode = cuda_graph
+        self._cuda_graph_max_s = int(cuda_graph_max_s)
+        self._cuda_graph_cache = int(cuda_graph_cache)
+        self._cuda_graph_ok = True   # flipped off on first capture failure
         self._graphs = {}
 
         priors = np.asarray(priors, dtype=np.float64).reshape(-1)
@@ -351,8 +379,11 @@ class BpTriton:
 
         BLOCK_S = self.block_s
         grid_s = triton.cdiv(S, BLOCK_S)
-        grid_chk = (grid_s, C)
-        grid_bit = (grid_s, N)
+        # #6: 1-D flattened grids (grid_s * units,) -- the kernels recover the
+        # (shot-tile, unit) pair internally. Keeps C/N off the 65535-capped
+        # grid dim 1 so surface d>=15 launches succeed.
+        grid_chk = (grid_s * C,)
+        grid_bit = (grid_s * N,)
 
         for _ in range(int(n_iter)):
             _check_update_kernel[grid_chk](
@@ -378,7 +409,8 @@ class BpTriton:
         Lo = self._Lo_dev(dev)
         E, N, C = self.n_edges, self.n_bits, self.n_checks
         BLOCK_S = self.block_s
-        grid_s = _triton.cdiv(S, BLOCK_S); grid_chk = (grid_s, C); grid_bit = (grid_s, N)
+        grid_s = _triton.cdiv(S, BLOCK_S)
+        grid_chk = (grid_s * C,); grid_bit = (grid_s * N,)  # #6: 1-D flattened grids
         mu_init_exp = mu_init.unsqueeze(1).expand(E, S).contiguous()
         mu = torch.empty((E, S), dtype=torch.float32, device=dev)
         nu = torch.empty((E, S), dtype=torch.float32, device=dev)
@@ -404,6 +436,31 @@ class BpTriton:
         with torch.cuda.graph(gr):
             pred = core()
         return {"graph": gr, "ssign": ssign, "pred": pred, "pin": pin, "C": C}
+
+    def _use_graph(self, S, dev):
+        """#4/#(a): decide whether to take the CUDA-graph fast path for batch S.
+
+        ``auto`` (default) gates on batch size: only small batches
+        (S <= cuda_graph_max_s) are launch-bound enough for the replay to win,
+        and the per-shape cache is capped (cuda_graph_cache) so a stream of
+        distinct large shapes can't balloon captured-tensor memory. ``True``
+        forces it for any S; ``False`` disables it. Falls back to eager once a
+        capture has failed."""
+        if not self._cuda_graph_ok:
+            return False
+        if dev.type != "cuda" or not torch.cuda.is_available():
+            return False
+        if self._cuda_graph_mode is True:
+            return True
+        if self._cuda_graph_mode == "auto":
+            if S > self._cuda_graph_max_s:
+                return False
+            # only spend a new capture slot while under the cache cap; already
+            # captured shapes always replay.
+            if S not in self._graphs and len(self._graphs) >= self._cuda_graph_cache:
+                return False
+            return True
+        return False
 
     def _decode_graphed(self, dets, dev):
         """dets: (S, C) bool -> predicted observables (n_obs, S) via graph replay."""
@@ -450,12 +507,12 @@ class BpTriton:
         if dets.ndim == 1:
             dets = dets[None, :]
         dev = torch.device(device)
-        if self._cuda_graph and dev.type == "cuda" and torch.cuda.is_available():
+        if self._use_graph(int(dets.shape[0]), dev):
             try:
                 pred = self._decode_graphed(dets, dev)          # (n_obs, S)
                 return (pred > 0.5).t().cpu().numpy()
             except Exception:
-                self._cuda_graph = False  # capture/replay unsupported -> eager path
+                self._cuda_graph_ok = False  # capture/replay unsupported -> eager
         E, N, C = self.n_edges, self.n_bits, self.n_checks
         lam, cedge, bedge, edge_bit, mu_init = self._device_tensors(dev)
         Lo = self._Lo_dev(dev)                                  # (n_obs, N) int32

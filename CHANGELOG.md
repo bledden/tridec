@@ -2,16 +2,35 @@
 
 ## Unreleased
 
-**CUDA-graph fast path for small-batch BP (#4, opt-in).**
-`from_dem(..., algorithm="bp", cuda_graph=True)` captures the fixed `n_iter`
-min-sum BP kernel loop + the `Lo` observable projection into a CUDA graph per
-batch shape and replays it, collapsing the per-launch overhead that dominates the
-small-batch (latency-bound) regime. **Bit-identical** to the eager path (verified
-H200, surface d=5, S=1/16/256/1024 + replay reuse); **1.59× faster at batch-1**
-(1.03 → 0.65 ms). Per-shape graph cache; silent fallback to eager on any capture
-failure, so the default path (`cuda_graph=False`) is unchanged. Pinned-memory
-staging for the syndrome upload. Receipt: `bench/receipts/cuda_graph_d5.md`.
-Closes #4. (min-sum BP only — relay's per-shot early-exit is not capturable.)
+**Surface d>=15 BP-kernel ceiling lifted via 1-D grid flatten (#6).** The
+two-kernel min-sum BP path (`_check_update_kernel` / `_bit_update_kernel`)
+launched on a 2-D grid `(grid_s, units)` where `units` = check count `C` /
+bit count `N` rode grid dimension 1, capped at **65535** on both CUDA and HIP.
+Surface BP first crossed it at **d=15** (`N`=72191 bits) — failing identically on
+H200 and MI300X (a shared kernel-launch limit, not memory or vendor; d=14 was the
+last working distance). The kernels now launch on a **1-D grid** `(grid_s *
+units,)` and recover the `(shot-tile, unit)` pair internally; grid dim 0 caps at
+2^31-1, so `C`/`N` no longer bind. **Bit-identical** to the old grid (per-program
+work unchanged; proven on Metal d=3..11 against the old grid, and numpy-vs-triton
+on CUDA+ROCm). Validated cross-vendor: **d=15 (72191 bits) and d=17 (107113 bits)
+now decode** on both H200 and MI300X. Closes #6.
+
+**CUDA-graph fast path now default-on for small batches (#4).** `cuda_graph`
+defaults to **`"auto"`** (was `False`): the captured-graph replay (fixed `n_iter`
+min-sum BP loop + `Lo` projection per batch shape) is used only when `S <=
+cuda_graph_max_s` (default 256), where per-launch overhead dominates and replay
+wins (**1.93× at batch-1 on H200**, 1.3–1.7× through S=256 on both vendors);
+larger one-off batches stay eager. The per-shape graph cache is capped
+(`cuda_graph_cache`, default 16) to bound captured-tensor memory; silent fallback
+to eager on any capture failure (Metal/CPU unaffected). `cuda_graph=True` forces
+it for any `S`, `=False` disables. **The small-S gate is load-bearing:** on
+H200/CUDA a *forced* large-batch graph collapses to ~95 ms at S>=512 (a
+cuBLAS-in-graph workspace pathology; MI300X degrades gracefully to parity), so
+`max_s=256` keeps the default safely below that cliff — flipping default-on for
+all S would have been a 100x H200 regression. Bit-identical to eager, validated
+cross-vendor (incl. ROCm/hipGraph). Receipts: `bench/receipts/cuda_graph_d5.md`,
+`bench/receipts/followup_d15_graph.md`. Closes #4. (min-sum BP only — relay's
+per-shot early-exit is not capturable.)
 
 ## 0.2.1 — 2026-06-14
 

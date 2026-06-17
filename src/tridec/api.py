@@ -202,7 +202,7 @@ class BpDecoder:
 
     def __init__(self, H, priors, observables=None, backend="auto", device=None,
                  max_iter=30, ms_scaling_factor=0.625, block_s=256, dem=None,
-                 cuda_graph=False):
+                 cuda_graph="auto", cuda_graph_max_s=256, cuda_graph_cache=16):
         self.backend = resolve_backend(backend)
         self.device = _default_device(self.backend, device)
         self.dem = dem
@@ -223,7 +223,9 @@ class BpDecoder:
             from .backends.bp_triton import BpTriton
             self._impl = BpTriton(H, priors, max_iter=max_iter,
                                   ms_scaling_factor=ms_scaling_factor,
-                                  block_s=block_s, cuda_graph=cuda_graph)
+                                  block_s=block_s, cuda_graph=cuda_graph,
+                                  cuda_graph_max_s=cuda_graph_max_s,
+                                  cuda_graph_cache=cuda_graph_cache)
 
         Lo = _dense_uint8(observables)
         self._Lo = Lo
