@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+**CUDA-graph fast path for small-batch BP (#4, opt-in).**
+`from_dem(..., algorithm="bp", cuda_graph=True)` captures the fixed `n_iter`
+min-sum BP kernel loop + the `Lo` observable projection into a CUDA graph per
+batch shape and replays it, collapsing the per-launch overhead that dominates the
+small-batch (latency-bound) regime. **Bit-identical** to the eager path (verified
+H200, surface d=5, S=1/16/256/1024 + replay reuse); **1.59× faster at batch-1**
+(1.03 → 0.65 ms). Per-shape graph cache; silent fallback to eager on any capture
+failure, so the default path (`cuda_graph=False`) is unchanged. Pinned-memory
+staging for the syndrome upload. Receipt: `bench/receipts/cuda_graph_d5.md`.
+Closes #4. (min-sum BP only — relay's per-shot early-exit is not capturable.)
+
 ## 0.2.1 — 2026-06-14
 
 *Validated on all three platforms: Metal (M4 Max), NVIDIA H200 (CUDA), and AMD

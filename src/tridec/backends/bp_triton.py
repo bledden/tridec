@@ -183,7 +183,7 @@ class BpTriton:
     """
 
     def __init__(self, H, priors, max_iter=30, ms_scaling_factor=0.625,
-                 block_s=256):
+                 block_s=256, cuda_graph=False):
         if sp.issparse(H):
             H = H.toarray()
         self.H = (np.asarray(H, dtype=np.uint8) % 2)
@@ -191,6 +191,13 @@ class BpTriton:
         self.max_iter = int(max_iter)
         self.ms = float(ms_scaling_factor)
         self.block_s = int(block_s)
+        # #4: opt-in CUDA-graph fast path for the launch-bound small/repeated-batch
+        # regime. Captures the fixed n_iter kernel loop + Lo projection per batch
+        # shape and replays it (eliminates per-launch overhead); bit-identical to
+        # the eager path. Cache keyed by batch size S; disabled automatically if
+        # capture ever fails (e.g. uncapturable driver/op).
+        self._cuda_graph = bool(cuda_graph)
+        self._graphs = {}
 
         priors = np.asarray(priors, dtype=np.float64).reshape(-1)
         if priors.shape[0] != self.n_bits:
@@ -360,6 +367,58 @@ class BpTriton:
             )
         return post, mu, nu
 
+    # ---- #4: CUDA-graph fast path (opt-in via cuda_graph=True) ----------------
+    def _build_graph(self, dev, S):
+        """Capture the fixed n_iter BP loop + Lo projection for batch size S into
+        a CUDA graph over static tensors. Per-decode the only input copied in is
+        ``ssign`` (staged through a pinned host buffer); ``pred`` is the captured
+        output. Bit-identical to ``_run_core`` + the eager Lo projection."""
+        import triton as _triton
+        lam, cedge, bedge, _eb, mu_init = self._device_tensors(dev)
+        Lo = self._Lo_dev(dev)
+        E, N, C = self.n_edges, self.n_bits, self.n_checks
+        BLOCK_S = self.block_s
+        grid_s = _triton.cdiv(S, BLOCK_S); grid_chk = (grid_s, C); grid_bit = (grid_s, N)
+        mu_init_exp = mu_init.unsqueeze(1).expand(E, S).contiguous()
+        mu = torch.empty((E, S), dtype=torch.float32, device=dev)
+        nu = torch.empty((E, S), dtype=torch.float32, device=dev)
+        post = torch.empty((N, S), dtype=torch.float32, device=dev)
+        ssign = torch.zeros((C, S), dtype=torch.float32, device=dev)
+        pin = torch.empty((S, C), dtype=torch.uint8, pin_memory=True)  # H2D staging
+
+        def core():
+            mu.copy_(mu_init_exp)
+            for _ in range(int(self.max_iter)):
+                _check_update_kernel[grid_chk](mu, nu, ssign, cedge, S, E, C, self.ms,
+                                               MAXDEG_C=self.MAXDEG_C, BLOCK_S=BLOCK_S, INF=_INF)
+                _bit_update_kernel[grid_bit](nu, mu, post, lam, bedge, S, E, N,
+                                             MAXDEG_B=self.MAXDEG_B, BLOCK_S=BLOCK_S)
+            return torch.remainder(Lo @ (post < 0.0).to(torch.float32), 2.0)
+
+        st = torch.cuda.Stream(); st.wait_stream(torch.cuda.current_stream())
+        with torch.cuda.stream(st):
+            for _ in range(3):
+                core()
+        torch.cuda.current_stream().wait_stream(st); torch.cuda.synchronize()
+        gr = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(gr):
+            pred = core()
+        return {"graph": gr, "ssign": ssign, "pred": pred, "pin": pin, "C": C}
+
+    def _decode_graphed(self, dets, dev):
+        """dets: (S, C) bool -> predicted observables (n_obs, S) via graph replay."""
+        S = int(dets.shape[0])
+        g = self._graphs.get(S)
+        if g is None:
+            g = self._build_graph(dev, S)
+            self._graphs[S] = g
+        g["pin"].copy_(torch.from_numpy(np.ascontiguousarray(dets, dtype=np.uint8)))
+        syn = g["pin"].to(dev, non_blocking=True)              # (S, C) uint8
+        one = torch.ones((), dtype=torch.float32, device=dev)
+        g["ssign"].copy_(torch.where((syn.to(torch.int32) & 1).t() == 0, one, -one))
+        g["graph"].replay()
+        return g["pred"]
+
     def run_iterations(self, syndrome, n_iter=None, device="cuda",
                        return_messages=False):
         out = self.run_iterations_batch(
@@ -391,6 +450,12 @@ class BpTriton:
         if dets.ndim == 1:
             dets = dets[None, :]
         dev = torch.device(device)
+        if self._cuda_graph and dev.type == "cuda" and torch.cuda.is_available():
+            try:
+                pred = self._decode_graphed(dets, dev)          # (n_obs, S)
+                return (pred > 0.5).t().cpu().numpy()
+            except Exception:
+                self._cuda_graph = False  # capture/replay unsupported -> eager path
         E, N, C = self.n_edges, self.n_bits, self.n_checks
         lam, cedge, bedge, edge_bit, mu_init = self._device_tensors(dev)
         Lo = self._Lo_dev(dev)                                  # (n_obs, N) int32
