@@ -1,13 +1,13 @@
-"""Experimental Metal (Apple silicon, triton-metal) backend gates.
+"""Experimental Metal (Apple silicon, triton-msl) backend gates.
 
-Runs ONLY in the triton-metal environment: darwin + triton + triton_metal
+Runs ONLY in the triton-msl environment: darwin + triton + triton_msl
 importable + torch with no CUDA/ROCm device. Everywhere else this module
 skips cleanly at collection.
 
 These are the spike-level gates (bench/receipts/metal_spike.md) re-run
 through the PUBLIC API path (``tridec.from_dem(..., backend="metal")`` /
 ``backend="auto"`` / ``backend="triton"``) instead of hand-rolled device
-args. The triton-metal execution pattern is CPU torch tensors (zero-copy
+args. The triton-msl execution pattern is CPU torch tensors (zero-copy
 UMA; "Not mps"), fp32 kernels — the gates are agreement/LER vs the fp64
 numpy reference, not bit-identity.
 """
@@ -20,7 +20,7 @@ pytestmark = pytest.mark.metal
 
 triton = pytest.importorskip("triton")
 torch = pytest.importorskip("torch")
-pytest.importorskip("triton_metal", reason="triton-metal not installed")
+pytest.importorskip("triton_msl", reason="triton-msl not installed")
 if sys.platform != "darwin":
     pytest.skip("Metal backend is darwin-only", allow_module_level=True)
 if torch.cuda.is_available():
@@ -84,7 +84,7 @@ def test_metal_decoder_uses_cpu_tensors(surface_dem_shots):
     dem, _, _ = surface_dem_shots
     dec = tridec.from_dem(dem, backend="metal")
     assert dec.backend == "metal"
-    assert dec.device == "cpu"     # triton-metal pattern: CPU tensors, not mps
+    assert dec.device == "cpu"     # triton-msl pattern: CPU tensors, not mps
     assert dec.name == "portable-bp[metal]"
     assert dec.config["backend"] == "metal"
 

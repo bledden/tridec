@@ -1,6 +1,6 @@
 {
  "meta": {
-  "STATUS": "PRELIMINARY / EXPERIMENTAL \u2014 fp32 Metal (triton-metal), one machine, small shot counts. NOT official Relay-BP surface receipts; official numbers are deferred to the Phase-3 CUDA/ROCm session (docs/benchmark.md TODO).",
+  "STATUS": "PRELIMINARY / EXPERIMENTAL \u2014 fp32 Metal (triton-msl), one machine, small shot counts. NOT official Relay-BP surface receipts; official numbers are deferred to the Phase-3 CUDA/ROCm session (docs/benchmark.md TODO).",
   "date": "2026-06-10",
   "platform": {
    "system": "darwin",

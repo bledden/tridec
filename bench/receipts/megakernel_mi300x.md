@@ -38,7 +38,7 @@ threadgroup barrier matters across wave boundaries. Verified honored:
   (bp 143 / relay 148), same pattern as H200.
 
 This is the ROCm analogue of the H200 barrier proof and the counter-example to
-the triton-metal drop: triton-rocm 3.1 lowers `tl.debug_barrier` correctly.
+the triton-msl drop: triton-rocm 3.1 lowers `tl.debug_barrier` correctly.
 
 ## 2. Correctness gates (`tests/test_megakernel_cuda.py`, 14 passed)
 

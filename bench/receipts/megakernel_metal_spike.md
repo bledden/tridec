@@ -1,11 +1,11 @@
 # Megakernel spike (issue #2, v0.2): single-launch persistent BP / Relay-BP on Metal
 
-> **BLOCK-lift follow-up landed (2026-06-13):** the two triton-metal codegen
+> **BLOCK-lift follow-up landed (2026-06-13):** the two triton-msl codegen
 > gaps that forced `BLOCK=32` below (dropped `tl.debug_barrier`; reduction-in-
 > loop at `BLOCK≥256`) are fixed upstream (CODEGEN_VERSION 2026.06.13). Metal is
 > now lifted to **BP=256 / relay=128** — see `megakernel_metal_lift.md` /
 > `.json` for the re-measured numbers. This receipt is retained as the
-> historical record of the `BLOCK=32` workaround and the triton-metal
+> historical record of the `BLOCK=32` workaround and the triton-msl
 > limitation repros. (Relay still refuses at `BLOCK≥256`, loudly — detailed in
 > the lift receipt.)
 
@@ -14,7 +14,7 @@
 > `megakernel_h200.md` / `megakernel_h200.json`.
 
 **Date:** 2026-06-10
-**Status:** PRELIMINARY / EXPERIMENTAL — Metal (triton-metal) receipts only.
+**Status:** PRELIMINARY / EXPERIMENTAL — Metal (triton-msl) receipts only.
 H200/MI300X receipts + the CUDA/ROCm autotune pass are a later cloud session.
 **Verdict:** PASS — Plan A (shot-per-program, global per-shot buffers)
 survived intact. ONE kernel launch per `decode_batch`, per-shot early exit,
@@ -50,12 +50,12 @@ recovered: relay decode_batch(2000) **30.0 s → 0.46 s (65×)**.
 
 - Apple M4 Max, macOS (Darwin 24.6.0), `/tmp/pq-metal-venv` per
   `metal_spike.md` recipe (python 3.14.4)
-- triton-metal @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree),
+- triton-msl @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree),
   triton 3.7.0 (`3.7.0+git4da2e268`, source build), torch 2.9.1,
   stim 1.15.0, relay-bp 0.2.2
 - Execution pattern: CPU torch tensors (UMA), `device="cpu"`, fp32,
   **block=32** (one SIMD-group per program — required on Metal, see
-  "triton-metal limitations" below)
+  "triton-msl limitations" below)
 
 ## Validation gates (script: `bench/megakernel_metal.py`; JSON receipt:
 `megakernel_metal_spike.json`; pytest: `tests/test_megakernel_metal.py`)
@@ -116,13 +116,13 @@ sits below the old MATH-only time, because the per-shot early exit also
 eliminates the host loop's over-decoding (the host runs every leg until ALL
 shots converge; mean legs actually needed: 5.55 of 61).
 
-## triton-metal limitations found (probed; minimal repros in /tmp, see below)
+## triton-msl limitations found (probed; minimal repros in /tmp, see below)
 
-1. **`tl.debug_barrier()` is SILENTLY DROPPED** by triton-metal @4c42e96
+1. **`tl.debug_barrier()` is SILENTLY DROPPED** by triton-msl @4c42e96
    with triton 3.7: the op reaches TTGIR as `ttg.barrier all` (renamed
    upstream ~3.5), but the lowerer only recognizes the old
    `tt.debug_barrier` spelling and skips unknown ops without error
-   (`triton_metal/codegen/generic_lowerer.py`, op dispatch + the
+   (`triton_msl/codegen/generic_lowerer.py`, op dispatch + the
    `has_barrier_ops` scan). The megakernels NEED these barriers — the check
    pass writes `nu` that the bit pass gathers cross-lane — and without them
    the kernel is racy: measured run-to-run posterior agreement ~0.80 at 10
@@ -131,7 +131,7 @@ shots converge; mean legs actually needed: 5.55 of 61).
    uniform control flow), where the missing barriers are benign — verified
    bit-identical + deterministic above. The barriers stay in the kernel
    source (they're required on CUDA/ROCm, where `tl.debug_barrier` works).
-   Fix for triton-metal (NOT applied — out of scope for this repo): map
+   Fix for triton-msl (NOT applied — out of scope for this repo): map
    `ttg.barrier` alongside `tt.debug_barrier` in the lowerer dispatch and in
    the `has_barrier_ops` detection (two one-line edits).
 2. **Cross-lane reductions (`tl.sum`) inside dynamic loops miscompile for
@@ -149,7 +149,7 @@ shots converge; mean legs actually needed: 5.55 of 61).
    guard loop. (Verified workable: probe `2b/2c/2d` + the full control
    skeleton, all PASS.)
 
-What DOES work on triton-metal 3.7 (probed PASS): runtime-bound and strided
+What DOES work on triton-msl 3.7 (probed PASS): runtime-bound and strided
 `for` loops, nested dynamic loops with `tl.where`-computed bounds, zero-trip
 dynamic loops, `tl.static_range` unrolls inside dynamic loops (MAXDEG_C up
 to 48), gathers/scatters with computed indices, int32 xor parity, scalar
@@ -168,7 +168,7 @@ arithmetic.
 - fp64 relay megakernel gate vs the F64 oracle (Metal has no fp64).
 
 *Spike probe artifacts: /tmp/mk_probe.py, /tmp/mk_probe2.py,
-/tmp/mk_probe3.py (the triton-metal limitation repros), /tmp/mk_bar_test.py,
+/tmp/mk_probe3.py (the triton-msl limitation repros), /tmp/mk_bar_test.py,
 /tmp/mk_bar_test2.py (the dropped-barrier repro). Repo additions on the
 `megakernel` branch only: the backend module, this receipt + JSON, the bench
 script, and the metal-gated test module.*

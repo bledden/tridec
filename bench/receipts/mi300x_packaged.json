@@ -33,7 +33,7 @@
   "duration_s": 121.53,
   "skip_reasons": [
    "SKIPPED [1] tests/test_api.py:85: triton+GPU available here; the unavailable path is moot",
-   "SKIPPED [1] tests/test_metal.py:23: triton-metal not installed",
+   "SKIPPED [1] tests/test_metal.py:23: triton-msl not installed",
    "SKIPPED [8] tests/test_dem_hash_gate.py:81: strict text-hash identity vs zoo_grid pins is defined on the receipt platform (darwin/arm64): stim's DEM float computation and text rendering are platform-dependent (see docs/benchmark.md)"
   ]
  },

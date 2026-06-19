@@ -1,7 +1,7 @@
 """Generate ``bench/receipts/surface_relay_metal_preliminary.json``.
 
 PRELIMINARY / EXPERIMENTAL receipts: Relay-BP on surface-code memory via the
-**experimental Metal backend** (triton-metal, fp32, single machine). These
+**experimental Metal backend** (triton-msl, fp32, single machine). These
 are NOT official Relay-BP surface numbers — those require the CUDA/ROCm
 fp32/fp64 paths and are deferred to the Phase-3 GPU session. Collected here
 because the Metal env was at hand and the numbers are interesting: Relay-BP's
@@ -13,7 +13,7 @@ per cell, BP/relay on the raw DEM, MWPM on the decomposed DEM, same shots),
 but with PRELIMINARY shot counts (2000/cell — relay on Metal is launch-bound,
 ~7-16 ms/shot) and the experimental fp32 Metal kernels.
 
-Run (in the triton-metal environment):  python bench/surface_relay_metal.py
+Run (in the triton-msl environment):  python bench/surface_relay_metal.py
 """
 import json
 import platform
@@ -89,7 +89,7 @@ def main():
     import torch
     import triton
     meta = {
-        "STATUS": "PRELIMINARY / EXPERIMENTAL — fp32 Metal (triton-metal), "
+        "STATUS": "PRELIMINARY / EXPERIMENTAL — fp32 Metal (triton-msl), "
                   "one machine, small shot counts. NOT official Relay-BP "
                   "surface receipts; official numbers are deferred to the "
                   "Phase-3 CUDA/ROCm session (docs/benchmark.md TODO).",

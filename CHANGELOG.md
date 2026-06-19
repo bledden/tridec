@@ -65,17 +65,17 @@ suite 99 passed / 6 skipped); CUDA/ROCm dispatch is a pre-publish confirmation
 (the megakernel's kernel correctness there is already receipted).
 
 **Metal megakernel fully lifted off the `BLOCK=32` pin — both kernels at
-`BLOCK=256`.** The `triton-metal` codegen gaps that forced `BLOCK=32` in 0.2.0
+`BLOCK=256`.** The `triton-msl` codegen gaps that forced `BLOCK=32` in 0.2.0
 (silently-dropped `tl.debug_barrier`; cross-lane reduction-in-loop) are fixed
 upstream. Metal now runs **BP at `(256)`** (20 → 12 ms, 1.67×) and **relay at
 `(256, num_warps=8)`** (441 → 152 ms, **2.89×**), lifting the Metal relay
 headline from **65× → ~197×** vs the v0.1 two-kernel path (30.0 s → 0.152 s /
 2000 shots), relay bit-identical to `BLOCK=128`. The relay `num_warps=8` sets
 `num_threads = 256 = BLOCK` so each thread handles one element (`n=1`); at `n>1`
-triton-metal's base path under-covers a BLOCK-wide store and now **loudly
+triton-msl's base path under-covers a BLOCK-wide store and now **loudly
 refuses** (`MetalNonRecoverableError`, never silent-wrong). All 4 Metal gates
 pass at the new defaults; relay validated deterministic + bit-identical to
-`BLOCK=128` + LER-vs-oracle over repeated runs. Requires triton-metal with the
+`BLOCK=128` + LER-vs-oracle over repeated runs. Requires triton-msl with the
 in-loop-reduction + `n=1`-store fixes (older → relay@256 loudly refuses).
 Receipt: `bench/receipts/megakernel_metal_lift.{md,json}`.
 
@@ -98,7 +98,7 @@ both CUDA and ROCm, incl. fp64-vs-oracle; barriers verified honored on both —
 PTX `bar.sync` / AMDGCN `s_barrier`).
 
 Relay-BP speedups vs the v0.1 two-kernel path:
-- **Metal** (M4 Max, triton-metal, BLOCK=32): 30.0 s → **0.46 s** / 2000 shots (**65×**).
+- **Metal** (M4 Max, triton-msl, BLOCK=32): 30.0 s → **0.46 s** / 2000 shots (**65×**).
 - **NVIDIA H200** (CUDA, triton 3.0): **9–19×** fp32 (fp64 to 37× at mid-batch); batch-1 62.5 → 3.44 ms.
 - **AMD MI300X** (ROCm, torch 2.5.1+rocm6.2 / triton 3.1, gfx942): **9–32×** fp32; batch-1 8.48 ms.
 
@@ -123,7 +123,7 @@ but the public-API dispatch path needs its own GPU gating before the default
 flips, and that discipline is not bent for the tag.
 
 Receipts: `bench/receipts/megakernel_{h200,mi300x,metal}*`. Metal is BLOCK=32
-pending an upstream triton-metal barrier fix (confirmed on its dev branch).
+pending an upstream triton-msl barrier fix (confirmed on its dev branch).
 
 ## 0.1.0 — 2026-06-10
 
@@ -132,7 +132,7 @@ for stim `DetectorErrorModel`s (or raw parity-check matrices), with numpy and
 torch CPU references, `sinter.collect` integration, and a matched-protocol
 validation layer — validated on **NVIDIA H200 (CUDA 12.4, triton 3.0)** and
 **AMD MI300X (ROCm 7.0, triton 3.4)**, with **experimental Apple-silicon
-(Metal) support** via triton-metal.
+(Metal) support** via triton-msl.
 
 **No-regression result: 31/32 exact + 1 documented upstream nondeterminism.**
 The full source-grid reproduction (8 cells × 4 ldpc-family decoders at exact

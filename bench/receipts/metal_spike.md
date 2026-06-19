@@ -1,4 +1,4 @@
-# Metal spike: tridec Triton kernels on Apple Silicon via triton-metal
+# Metal spike: tridec Triton kernels on Apple Silicon via triton-msl
 
 **Date:** 2026-06-09
 **Verdict:** PASS — both `BpTriton` and `RelayBpTriton` (fp32) pass all existing
@@ -7,15 +7,15 @@ correctness gates on the Mac GPU, with **zero source changes to tridec**.
 ## Environment
 
 - Machine: Apple M4 Max, macOS (Darwin 24.6.0)
-- triton-metal: `<triton-metal checkout>` @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree, editable install)
+- triton-msl: `<triton-msl checkout>` @ `4c42e9685db5cf58ce856d2816844066a27feb6a` (clean tree, editable install)
 - triton: 3.7.0 (`3.7.0+git4da2e268`, local source build at `<triton checkout>`, editable)
 - torch 2.9.1 / stim 1.15.0 / relay-bp 0.2.2 / Python 3.14.4 (Homebrew)
-- tridec: working tree, editable, no GPU extra (triton came via triton-metal's env)
+- tridec: working tree, editable, no GPU extra (triton came via triton-msl's env)
 
 ## Venv recipe
 
 ```bash
-# triton 3.7.0 (source build) + triton-metal + torch already live in the
+# triton 3.7.0 (source build) + triton-msl + torch already live in the
 # Homebrew python3 site; inherit them instead of rebuilding triton from source.
 /opt/homebrew/bin/python3 -m venv --system-site-packages /tmp/pq-metal-venv
 /tmp/pq-metal-venv/bin/pip install -e <repo> --no-deps
@@ -24,7 +24,7 @@ correctness gates on the Mac GPU, with **zero source changes to tridec**.
 
 ## Device plumbing
 
-None required. triton-metal's documented usage pattern is **CPU torch tensors**
+None required. triton-msl's documented usage pattern is **CPU torch tensors**
 (zero-copy via UMA / `newBufferWithBytesNoCopy`; ARCHITECTURE.md says explicitly
 "Not mps"). Both backends already parameterize `device=` on every entry point,
 so the gates were run with `device="cpu"`; for relay, `dtype="float32"` (an
@@ -57,14 +57,14 @@ essentially bit-identical, LER differs by at most 1 shot in 2000.
 
 ### Smoke
 
-triton-metal README vector-add on CPU tensors: max error 0.00e+00.
+triton-msl README vector-add on CPU tensors: max error 0.00e+00.
 
 ## Honest read
 
 The kernels compile and run on Metal unmodified — both the bounded-degree
 unrolled `tl.static_range` loops (MAXDEG_C up to 48 on the surface DEM), the
 2-D grids, and all `tl.*` primitives used (load/store with masks, where,
-minimum, abs, zeros/full, int32 xor) are inside triton-metal's supported set.
+minimum, abs, zeros/full, int32 xor) are inside triton-msl's supported set.
 Batched BP is genuinely fast (2000-shot decode in 28–167 ms, 37–56x the
 per-shot numpy baseline on the same machine). "Experimental Metal support" is
 roughly a half-day of remaining work: a `device="cpu"`-on-macOS selection rule

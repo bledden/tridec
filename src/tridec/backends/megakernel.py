@@ -58,7 +58,7 @@ valid -- solution. The CUDA identity gate (tests/test_megakernel_cuda.py)
 accepts a prediction mismatch ONLY after verifying the shot is an exact
 fp64-weight tie between syndrome-consistent solutions.
 
-TRITON-METAL CODEGEN STATUS (triton-metal CODEGEN_VERSION 2026.06.13;
+TRITON-METAL CODEGEN STATUS (triton-msl CODEGEN_VERSION 2026.06.13;
 see bench/receipts/megakernel_metal_spike.md)
 ----------------------------------------------------------
   * Cross-lane reductions (``tl.sum``) INSIDE dynamic loops: the
@@ -68,16 +68,16 @@ see bench/receipts/megakernel_metal_spike.md)
     (256, None) and relay (256, 8) (``_tuned_config``); both verified
     deterministic + correct (gates below), relay bit-identical to BLOCK=128.
   * ``n = BLOCK / num_threads`` (num_threads = num_warps*32) MUST be 1 for the
-    relay kernel on Metal. triton-metal's base path emits general element-wise
+    relay kernel on Metal. triton-msl's base path emits general element-wise
     loads/stores as one-element-per-thread, so at n>1 it silently under-covers
-    a BLOCK-wide store -- now a LOUD ``MetalNonRecoverableError`` (triton-metal
+    a BLOCK-wide store -- now a LOUD ``MetalNonRecoverableError`` (triton-msl
     b82136b; never silent-wrong). Hence relay pins ``num_warps = BLOCK/32`` (=8
     at 256) so num_threads == BLOCK == n=1. BP carries no in-loop reduction so
     it is register-array-eligible (the n>1 single-pass regime covers it) and
     leaves num_warps default; worst case it degrades to the same loud refusal.
   * The kernels use NO ``while`` loops and NO scalar-``if`` assignment
     blocks (a ``while``-carried variable assigned inside a scalar ``if`` once
-    miscompiled silently on triton-metal). This structure is retained: the
+    miscompiled silently on triton-msl). This structure is retained: the
     leg loop is a ``for`` whose inner iteration loop gets a ZERO trip count
     once the shot converged (early exit as loop-bound algebra), carried
     scalars update via arithmetic / ``tl.where``, and the conditional
@@ -96,8 +96,8 @@ non-deterministic (observed on Metal: run-to-run posterior agreement ~0.80
 at 10 iterations). All barrier sites are in threadgroup-UNIFORM control
 flow (scalar loop bounds), as Metal requires.
 
-FIXED triton-metal GAP (CODEGEN_VERSION 2026.06.13): ``tl.debug_barrier()``
-is now HONORED on Metal. Earlier triton-metal silently dropped it (triton 3.7
+FIXED triton-msl GAP (CODEGEN_VERSION 2026.06.13): ``tl.debug_barrier()``
+is now HONORED on Metal. Earlier triton-msl silently dropped it (triton 3.7
 emits ``ttg.barrier all`` in TTGIR; the pre-fix lowerer only recognized the
 pre-3.5 ``tt.debug_barrier`` spelling and skipped unknown ops), which forced
 the Metal config to ``block=32`` (one 32-wide SIMD-group runs in lockstep, so
@@ -131,7 +131,7 @@ def _is_metal_env():
     if sys.platform != "darwin":
         return False
     try:
-        import triton_metal  # noqa: F401
+        import triton_msl  # noqa: F401
         return not torch.cuda.is_available()
     except Exception:
         return False
@@ -162,13 +162,13 @@ _CUDA_TUNED = {
 
 def _tuned_config(kind):
     """(block, num_warps) for this device and kernel ``kind`` ("bp" or
-    "relay"). On the triton-metal environment: bp=(256, None), relay=(256, 8)
+    "relay"). On the triton-msl environment: bp=(256, None), relay=(256, 8)
     -- both at BLOCK=256, fully lifted off the old BLOCK=32 pin. The relay
     ``num_warps=8`` is load-bearing: it sets num_threads = num_warps*32 = 256 =
     BLOCK so each thread handles exactly ONE element (n = BLOCK/num_threads = 1).
-    At n>1 (e.g. BLOCK=256 with the default 4 warps = 128 threads) triton-metal's
+    At n>1 (e.g. BLOCK=256 with the default 4 warps = 128 threads) triton-msl's
     base path under-covers general element-wise stores -- now a LOUD
-    MetalNonRecoverableError (refuses, never silent-wrong; triton-metal commit
+    MetalNonRecoverableError (refuses, never silent-wrong; triton-msl commit
     b82136b), so the n>1 footgun cannot bite silently. BP stays num_warps=None
     (it is register-array-eligible -- no in-loop reduction -- so the n>1
     single-pass regime covers it; worst case it degrades to the same loud
@@ -312,7 +312,7 @@ if _HAVE_TRITON:
         ``GAMMA`` is the host-precomputed (n_legs, N) per-leg gamma table.
         Control flow is for-loops only (no while / scalar-if): once
         ``nconv >= stop_nconv`` the remaining legs run with a ZERO iteration
-        bound (see module docstring: triton-metal silently miscompiles
+        bound (see module docstring: triton-msl silently miscompiles
         while-carried scalar-if assignment)."""
         s = tl.program_id(0).to(tl.int64)
         offs = tl.arange(0, BLOCK)

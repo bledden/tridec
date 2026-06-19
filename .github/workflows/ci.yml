@@ -4,7 +4,7 @@
 # devices, so the Triton kernel tiers (tests/test_bp_triton.py,
 # tests/test_relay_triton.py) skip in CI by design. The GPU paths are
 # validated by the carried receipts in bench/receipts/ (H200 + MI300X) and
-# the experimental Metal tier runs only on a local triton-metal machine.
+# the experimental Metal tier runs only on a local triton-msl machine.
 # The badge therefore certifies the CPU surface: API, backends (numpy/torch),
 # DEM extraction, validation harness, sinter adapter, and the receipt gates.
 #

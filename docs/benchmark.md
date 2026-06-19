@@ -199,7 +199,7 @@ receipt includes one-time Triton JIT compilation for the first cell at each
 DEM shape; the second cell at the same shape reflects steady-state.
 
 **PRELIMINARY (experimental Metal, fp32 — kept as the Metal-path receipt):**
-before the GPU session, the experimental triton-metal path produced a small
+before the GPU session, the experimental triton-msl path produced a small
 preliminary sample (`surface_relay_metal_preliminary.json`; 2000 shots/cell,
 same protocol/seed, fp32, one M4 Max):
 

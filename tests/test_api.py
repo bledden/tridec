@@ -31,7 +31,7 @@ def _metal_available():
         return False
     try:
         import triton  # noqa: F401
-        import triton_metal  # noqa: F401
+        import triton_msl  # noqa: F401
         import torch
         return not torch.cuda.is_available()
     except Exception:
@@ -75,8 +75,8 @@ def test_unknown_backend_raises():
 
 def test_metal_backend_unavailable_raises_clear_error():
     if _metal_available():
-        pytest.skip("triton-metal available here; the unavailable path is moot")
-    with pytest.raises(RuntimeError, match="triton-metal"):
+        pytest.skip("triton-msl available here; the unavailable path is moot")
+    with pytest.raises(RuntimeError, match="triton-msl"):
         resolve_backend("metal")
 
 

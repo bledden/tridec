@@ -10,7 +10,7 @@ Sections
 barrier_sanity : behavioral load->tl.debug_barrier->store ring repro
     (exact iff the barrier is honored; integer-valued fp32 so every add is
     exact) + a no-barrier negative control that MUST race + bar.sync counts
-    in the real megakernels' emitted PTX. The triton-metal environment
+    in the real megakernels' emitted PTX. The triton-msl environment
     silently drops tl.debug_barrier (see megakernel.py docstring) -- this
     section is the proof the CUDA/ROCm build does not.
 autotune : BLOCK x num_warps sweep for both megakernels (issue #3). Every

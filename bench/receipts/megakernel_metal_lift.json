@@ -1,18 +1,18 @@
 {
   "meta": {
-    "STATUS": "BLOCK-LIFT, FINAL (updated 2026-06-14). triton-metal honors tl.debug_barrier (Bug 1) + fixed in-loop reductions, so the Metal BLOCK=32 pin is FULLY LIFTED: BOTH kernels at BLOCK=256 -- BP (256, None), relay (256, num_warps=8). The relay num_warps=8 is load-bearing: num_threads=num_warps*32=256=BLOCK gives n=BLOCK/num_threads=1 element/thread; at n>1 triton-metal's base path under-covers a BLOCK-wide store -- now a LOUD MetalNonRecoverableError (triton-metal b82136b, never silent-wrong). Verified against the triton-metal B/C/A branch (worktree-multi-element-per-thread @ b82136b, CODEGEN 2026.06.13.1): relay (256,8) deterministic + bit-identical to BLOCK=128 + LER-matches the relay-bp oracle; test_megakernel_metal.py 4/4 PASS at the new defaults. NOTE: requires triton-metal >= b82136b; on older triton-metal relay@256 LOUDLY REFUSES (safe). [Earlier 2026-06-13 sections below documented the interim relay=128 state, when relay@256 still refused.] fp32, CPU(UMA) tensors, device='cpu'.",
+    "STATUS": "BLOCK-LIFT, FINAL (updated 2026-06-14). triton-msl honors tl.debug_barrier (Bug 1) + fixed in-loop reductions, so the Metal BLOCK=32 pin is FULLY LIFTED: BOTH kernels at BLOCK=256 -- BP (256, None), relay (256, num_warps=8). The relay num_warps=8 is load-bearing: num_threads=num_warps*32=256=BLOCK gives n=BLOCK/num_threads=1 element/thread; at n>1 triton-msl's base path under-covers a BLOCK-wide store -- now a LOUD MetalNonRecoverableError (triton-msl b82136b, never silent-wrong). Verified against the triton-msl B/C/A branch (worktree-multi-element-per-thread @ b82136b, CODEGEN 2026.06.13.1): relay (256,8) deterministic + bit-identical to BLOCK=128 + LER-matches the relay-bp oracle; test_megakernel_metal.py 4/4 PASS at the new defaults. NOTE: requires triton-msl >= b82136b; on older triton-msl relay@256 LOUDLY REFUSES (safe). [Earlier 2026-06-13 sections below documented the interim relay=128 state, when relay@256 still refused.] fp32, CPU(UMA) tensors, device='cpu'.",
     "date": "2026-06-14",
     "supersedes_config_in": "megakernel_metal_spike.{md,json} (which used BLOCK=32 throughout)",
     "platform": {"system": "darwin", "machine": "arm64", "python": "3.14.4", "device": "Apple M4 Max"},
     "versions": {
-      "triton_metal": "0.1.0a1 @ 0a1eafb (CODEGEN_VERSION 2026.06.13)",
+      "triton_msl": "0.1.0a1 @ 0a1eafb (CODEGEN_VERSION 2026.06.13)",
       "triton": "3.7.0",
       "torch": "2.9.1",
       "stim": "1.15.0",
       "relay_bp": "0.2.2",
       "numpy": "2.2.6"
     },
-    "protocol": "canonical BB bb72_r6_p0.003_Z fixture (.stim sampler seed 0 for shots; pinned .dem for decode), 2000 shots. Gates applied BEFORE timing: run-twice determinism (the load-bearing barrier-honored gate -- was ~0.80 posterior agreement when barriers were dropped), BP hard-decision agreement vs fp64 numpy reference, relay LER + per-shot prediction agreement vs the relay_bp Rust oracle. Caches (~/.triton/cache, ~/.cache/triton_metal) cleared before the run per the codegen bump. tests/test_megakernel_metal.py: 4/4 PASS at the lifted defaults (BP=256, relay=128).",
+    "protocol": "canonical BB bb72_r6_p0.003_Z fixture (.stim sampler seed 0 for shots; pinned .dem for decode), 2000 shots. Gates applied BEFORE timing: run-twice determinism (the load-bearing barrier-honored gate -- was ~0.80 posterior agreement when barriers were dropped), BP hard-decision agreement vs fp64 numpy reference, relay LER + per-shot prediction agreement vs the relay_bp Rust oracle. Caches (~/.triton/cache, ~/.cache/triton_msl) cleared before the run per the codegen bump. tests/test_megakernel_metal.py: 4/4 PASS at the lifted defaults (BP=256, relay=128).",
     "note_oracle_rng": "relay_bp's internal gamma RNG is not pinned, so the oracle's own failure count varies run-to-run (35 here; 31 in the 2026-06-10 spike). The gate is |LER_mega - LER_oracle| and per-shot agreement, both well within bars."
   },
   "block_sweep": {
@@ -47,7 +47,7 @@
     "bp30_block256_vs_v01_twokernel": {"v01_ms": 178, "mega_ms": 12, "speedup": 14.8}
   },
   "relay_full_lift_2026-06-14": {
-    "note": "FINAL relay lift to BLOCK=256 via num_warps=block/32 (n=1). Verified against triton-metal B/C/A branch @ b82136b. warmup 3 reps 5, min/median ms; all configs 39 fails = matches relay-bp oracle (35) within bar + bit-identical predictions to BLOCK=128.",
+    "note": "FINAL relay lift to BLOCK=256 via num_warps=block/32 (n=1). Verified against triton-msl B/C/A branch @ b82136b. warmup 3 reps 5, min/median ms; all configs 39 fails = matches relay-bp oracle (35) within bar + bit-identical predictions to BLOCK=128.",
     "configs": [
       {"block": 128, "num_warps": 4, "n": 1, "min_ms": 202.2, "median_ms": 204.5, "fails": 39, "det": true, "note": "prior default"},
       {"block": 256, "num_warps": 8, "n": 1, "min_ms": 152.5, "median_ms": 153.3, "fails": 39, "det": true, "bit_identical_to_128": true, "note": "CHOSEN (fastest)"},
@@ -59,6 +59,6 @@
     "gate": "tests/test_megakernel_metal.py 4/4 PASS at relay=(256,8) against b82136b"
   },
   "chosen_defaults": {"bp": [256, null], "relay": [256, 8]},
-  "requires": "relay BLOCK=256 requires triton-metal >= b82136b (B/C/A: barriers + in-loop reduction + n=1 base-path-store refusal). On older triton-metal, relay@256 LOUDLY REFUSES (safe, never silent-wrong).",
+  "requires": "relay BLOCK=256 requires triton-msl >= b82136b (B/C/A: barriers + in-loop reduction + n=1 base-path-store refusal). On older triton-msl, relay@256 LOUDLY REFUSES (safe, never silent-wrong).",
   "history": "The 2026-06-13 sections above documented an interim state: relay was pinned to BLOCK=128 because relay@256 REFUSED (in-loop reduction unsupported). The B/C/A branch fixed that; relay@256 is now correct at n=1. A regression was caught + fixed mid-flight: an intermediate B/C/A build made relay@256 SILENT-WRONG + racy at n=2 (num_warps=4); root-caused to base-path n>1 under-coverage, fixed by num_warps=block/32 + a loud refusal (b82136b). Full trail: tridec-bug-reports/REPLY_RELAY_BISECTION_2026-06-14.md."
 }

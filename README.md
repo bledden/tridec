@@ -18,7 +18,7 @@ reproduces its logical-error-rate validation numbers identically on an NVIDIA
 H200 (CUDA 12.4, triton 3.0) and an AMD MI300X (ROCm 7.0, triton 3.4) — see
 [docs/benchmark.md](docs/benchmark.md) and the raw receipts in
 `bench/receipts/`. Validated scope is NVIDIA + AMD; Apple silicon runs the
-same kernels through [triton-metal](https://github.com/bledden/triton-metal)
+same kernels through [triton-msl](https://github.com/bledden/triton-msl)
 as an **experimental** backend (see below).
 
 ## v0.2: the megakernel backend (opt-in)
@@ -33,7 +33,7 @@ verified honored on both):
 
 | Relay-BP megakernel vs v0.1 two-kernel | speedup |
 |---|---|
-| Apple M4 Max (Metal, triton-metal) | **~197×** — 30.0 s → 0.152 s / 2000 shots (relay BLOCK=256, num_warps=8) |
+| Apple M4 Max (Metal, triton-msl) | **~197×** — 30.0 s → 0.152 s / 2000 shots (relay BLOCK=256, num_warps=8) |
 | NVIDIA H200 (CUDA) | **9–19×** fp32 (fp64 to 37× mid-batch) — batch-1 62.5 → 3.44 ms; 34.6 µs/syn @8192 |
 | AMD MI300X (ROCm) | **9–32×** — batch-1 8.48 ms; 46.0 µs/syn @8192 |
 
@@ -41,7 +41,7 @@ verified honored on both):
 batch size — min–max across batch 1–16384. Absolute cross-vendor performance,
 where H200 leads, is in the limits below.) Receipt stacks: H200 (CUDA 12.4 /
 triton 3.0), MI300X (ROCm 6.2 / torch 2.5.1 / triton 3.1, gfx942), M4 Max
-(triton-metal, CODEGEN_VERSION 2026.06.13); raw in `bench/receipts/megakernel_*`
+(triton-msl, CODEGEN_VERSION 2026.06.13); raw in `bench/receipts/megakernel_*`
 — the Metal block-lift re-measure is in `megakernel_metal_lift.{md,json}`. The
 Metal 30.0 s baseline and the v0.1 Apple section's 31 s below are independent
 measurement runs of the same two-kernel relay (run-to-run jitter), not a
@@ -79,10 +79,10 @@ megakernel is a single-shot latency tool that loses at batch throughput).
   (441 → 152 ms, **2.89×** — the ~197× headline above), relay bit-identical to
   BLOCK=128. The relay `num_warps=8` is load-bearing: it sets `num_threads =
   num_warps×32 = 256 = BLOCK` so each thread handles exactly one element
-  (`n = BLOCK/num_threads = 1`); at `n>1` triton-metal's base path under-covers a
+  (`n = BLOCK/num_threads = 1`); at `n>1` triton-msl's base path under-covers a
   BLOCK-wide store and now **loudly refuses** (`MetalNonRecoverableError`, never
-  silent-wrong), so the footgun can't bite. Requires triton-metal with the
-  in-loop-reduction + `n=1`-store fixes (older triton-metal loudly refuses
+  silent-wrong), so the footgun can't bite. Requires triton-msl with the
+  in-loop-reduction + `n=1`-store fixes (older triton-msl loudly refuses
   relay@256). fp32-only on Metal (no fp64), same as the two-kernel path, and the
   fp32 near-tie-flip caveat below applies to the megakernel unchanged. Receipt:
   `bench/receipts/megakernel_metal_lift.md`.
@@ -152,7 +152,7 @@ oracle for the Triton path.
 | CPU (any) | numpy BP reference; torch BP bit-identical to numpy at fp64 (one iteration), LER-identical full decode |
 | NVIDIA H200, CUDA 12.4, torch 2.4.1, triton 3.0.0 | Triton BP: ≥99.5% hard-decision agreement vs fp64 references, LER-identical (156 = 156 = 156 fails / 2000 shots vs numpy/torch). Triton Relay-BP: LER-matches the `relay-bp` Rust oracle (31 vs 38 fails / 2000, overlapping Wilson CIs) — carried source-repo receipts |
 | AMD MI300X, ROCm 7.0.0, torch 2.9, triton 3.4.0 | Same kernels, unmodified: identical primitive-identity numbers (pre-leg posterior max-diff 1.8e-15) and the same oracle-vs-Triton LER identity (carried receipts) — **and validated through the installed package for v0.1.0** (`bench/receipts/mi300x_packaged.json`): full suite 88 passed / 10 skipped on gfx942 (GPU tiers bind, darwin-only strict tiers skip), packaged-API BP 166 = numpy 166 fails / 2000, Relay-BP fp32 34 vs Rust oracle 31 (overlapping CIs), throughput within ±2.2% of the carried receipt |
-| Apple silicon (M4 Max), triton-metal | **Experimental, spike-validated only** (`bench/receipts/metal_spike.md`): both kernels pass the same correctness gates at fp32; see the section below |
+| Apple silicon (M4 Max), triton-msl | **Experimental, spike-validated only** (`bench/receipts/metal_spike.md`): both kernels pass the same correctness gates at fp32; see the section below |
 
 *This table covers the **two-kernel** BP/Relay-BP path (v0.1). The v0.2
 **megakernel**'s own per-platform validation (14/14 gates on CUDA + ROCm,
@@ -163,21 +163,21 @@ receipts in `bench/receipts/megakernel_*`.*
 ## Experimental: Apple silicon (Metal)
 
 The same Triton kernels run on Apple-silicon GPUs through
-[triton-metal](https://github.com/bledden/triton-metal), with **zero changes
+[triton-msl](https://github.com/bledden/triton-msl), with **zero changes
 to the kernel source**. This is experimental: validated at spike level on one
 machine (M4 Max), fp32 only (Metal has no fp64), and not part of the
 official receipt set.
 
 ```bash
-# triton-metal + a triton >= 3.6 build + torch must be importable, then:
+# triton-msl + a triton >= 3.6 build + torch must be importable, then:
 pip install tridec
 python -c "import tridec; print(tridec.available_backends())"  # ['metal', ...]
 ```
 
-`backend="auto"` detects the triton-metal environment (darwin, `triton` +
-`triton_metal` importable, no CUDA/ROCm device) and selects `"metal"`;
+`backend="auto"` detects the triton-msl environment (darwin, `triton` +
+`triton_msl` importable, no CUDA/ROCm device) and selects `"metal"`;
 `backend="triton"` resolves to `"metal"` there too, and `backend="metal"`
-asserts the environment is present. The execution pattern is triton-metal's
+asserts the environment is present. The execution pattern is triton-msl's
 documented one — **CPU torch tensors** (zero-copy via unified memory; not
 `mps`) — so no device arguments are needed.
 
@@ -235,7 +235,7 @@ validated; see above). v0.1.0 shipped the two-kernel BP/Relay-BP path + the
 validation discipline. The kernels and their receipts are stable; the public API surface
 is young and may still move before 1.0 — minor `0.x` releases may rename or
 remove public API; `1.0` will lock the surface. GPU paths require triton
-+ a CUDA/ROCm GPU (or the experimental triton-metal environment); the
++ a CUDA/ROCm GPU (or the experimental triton-msl environment); the
 GPU/metal test tiers skip cleanly where unavailable.
 
 ## License

@@ -2,7 +2,7 @@
 
 PRELIMINARY / EXPERIMENTAL: validation gates + launch-overhead bench for the
 single-launch persistent BP / Relay-BP megakernels
-(``tridec.backends.megakernel``) on the **experimental triton-metal
+(``tridec.backends.megakernel``) on the **experimental triton-msl
 environment** (Apple silicon, fp32, CPU tensors). H200/MI300X receipts and
 the CUDA/ROCm autotune pass are deferred to the cloud session.
 
@@ -20,7 +20,7 @@ Bench: decode_batch wall-clock on the canonical BB cell, 2000 shots --
 relay (baseline measured ~31 s on this machine, launch-bound) and BP-only
 30-iter (baseline ~167 ms), warmup + reps documented in the receipt.
 
-Run (in the triton-metal environment):  python bench/megakernel_metal.py
+Run (in the triton-msl environment):  python bench/megakernel_metal.py
 """
 import json
 import platform
@@ -47,7 +47,7 @@ RECEIPT = HERE / "receipts" / "megakernel_metal_spike.json"
 MS = 0.625
 SHOTS = 2000
 SEED = 0
-DEVICE = "cpu"           # triton-metal pattern: CPU tensors (UMA), not mps
+DEVICE = "cpu"           # triton-msl pattern: CPU tensors (UMA), not mps
 RELAY_CFG = dict(gamma0=0.1, pre_iter=80, num_sets=60, set_max_iter=60,
                  gamma_dist_interval=(-0.24, 0.66),
                  stopping_criterion="nconv", dtype="float32")
@@ -230,7 +230,7 @@ def main():
     import torch
     import triton
     import relay_bp
-    import triton_metal  # the env gate: this script is metal-env-only
+    import triton_msl  # the env gate: this script is metal-env-only
 
     circ_bb = load_bb_circuit("0.003", "Z")
     circ_sf = load_surface_circuit()
@@ -267,9 +267,9 @@ def main():
 
     meta = {
         "STATUS": "PRELIMINARY / EXPERIMENTAL -- megakernel spike on the "
-                  "triton-metal environment (fp32, CPU tensors, block=32; "
+                  "triton-msl environment (fp32, CPU tensors, block=32; "
                   "see tridec/backends/megakernel.py docstring for the "
-                  "triton-metal codegen constraints). H200/MI300X receipts "
+                  "triton-msl codegen constraints). H200/MI300X receipts "
                   "+ autotune deferred to the cloud session (issue #2).",
         "date": time.strftime("%Y-%m-%d"),
         "platform": {"system": sys.platform, "machine": platform.machine(),

@@ -1,6 +1,6 @@
-"""Megakernel (single-launch persistent BP / Relay-BP) gates on triton-metal.
+"""Megakernel (single-launch persistent BP / Relay-BP) gates on triton-msl.
 
-Runs ONLY in the triton-metal environment (darwin + triton + triton_metal
+Runs ONLY in the triton-msl environment (darwin + triton + triton_msl
 importable + torch with no CUDA/ROCm device), like test_metal.py. CUDA/ROCm
 megakernel gates are the cloud session's job (issue #2).
 
@@ -28,7 +28,7 @@ pytestmark = pytest.mark.metal
 
 triton = pytest.importorskip("triton")
 torch = pytest.importorskip("torch")
-pytest.importorskip("triton_metal", reason="triton-metal not installed")
+pytest.importorskip("triton_msl", reason="triton-msl not installed")
 if sys.platform != "darwin":
     pytest.skip("Metal backend is darwin-only", allow_module_level=True)
 if torch.cuda.is_available():
@@ -82,7 +82,7 @@ def _bp_identity(dem, dets):
     assert bit_ident == 1.0, (
         f"BP megakernel posterior not bit-identical to BpTriton "
         f"({bit_ident:.6f}); on this env the op order is identical -- a "
-        f"mismatch means a kernel bug or a triton-metal codegen change")
+        f"mismatch means a kernel bug or a triton-msl codegen change")
     pred_old = old.decode_batch(dets, device=DEVICE)
     pred_meg = mega.decode_batch(dets, device=DEVICE)
     assert (pred_old == pred_meg).all()

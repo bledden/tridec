@@ -34,7 +34,7 @@ because the linux stim sampler draws different shots per box, not because the
 decoder differs.)
 
 **Bit-identical at d<=14 (no regression):**
-- Proven against the old grid on Metal (triton-metal), d=3..11, identical syndromes:
+- Proven against the old grid on Metal (triton-msl), d=3..11, identical syndromes:
   every prediction bit equal.
 - vs the numpy BP baseline on GPU (fp32 kernel vs fp64 reference; <=0.1% near-tie
   disagreement allowed): d=5 **0.000%**, d=9 **0.000%**, d=13 **0.050%** (MI300X) /

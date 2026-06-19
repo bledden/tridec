@@ -9,7 +9,7 @@ pod), torch 2.4.1+cu124, triton 3.0.0, CUDA 12.4, python 3.11.10
 
 ## Verdict
 
-PASS. CUDA honors `tl.debug_barrier()` (the triton-metal showstopper does
+PASS. CUDA honors `tl.debug_barrier()` (the triton-msl showstopper does
 not exist here), so the megakernels run at real block sizes. All 14 CUDA
 gates green at BLOCK=128 AND 256, including the fp64 relay gates Metal
 couldn't run. Autotuned winners: **bp (512, 8)**, **relay (256, 8)** — every
@@ -17,7 +17,7 @@ one of the 24 sweep configs passed its correctness gate before timing.
 
 ## 1. Barrier sanity (the decisive first gate)
 
-triton-metal silently DROPS `tl.debug_barrier` (megakernel_metal_spike.md),
+triton-msl silently DROPS `tl.debug_barrier` (megakernel_metal_spike.md),
 which forced block=32 there. Verified CUDA does not:
 
 - **Behavioral repro:** a load → `tl.debug_barrier` → store ring-rotation

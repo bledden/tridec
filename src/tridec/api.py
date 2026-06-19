@@ -10,15 +10,15 @@ Backends
                    triton + a CUDA or ROCm GPU. fp32 messages on the BP path
                    (>=99.5% hard-decision agreement vs the fp64 references,
                    LER-validated on H200 and MI300X — see bench/receipts/).
-                   In the triton-metal environment (no CUDA/ROCm), a
+                   In the triton-msl environment (no CUDA/ROCm), a
                    ``"triton"`` request resolves to ``"metal"``.
   * ``"metal"``  — EXPERIMENTAL: the same Triton kernels on Apple silicon via
-                   triton-metal (darwin + triton + triton_metal importable, no
+                   triton-msl (darwin + triton + triton_msl importable, no
                    CUDA/ROCm device). Execution pattern is CPU torch tensors
                    (zero-copy UMA — not mps); fp32 only (Metal has no fp64).
                    Spike-validated on M4 Max — see bench/receipts/metal_spike.md.
   * ``"auto"``   — triton if importable AND a CUDA/ROCm GPU is visible, else
-                   metal if the triton-metal environment is detected, else
+                   metal if the triton-msl environment is detected, else
                    torch if importable, else numpy.
 
 Algorithms per backend (honest availability matrix):
@@ -78,14 +78,14 @@ def _triton_gpu_available():
 
 
 def _metal_available():
-    """The EXPERIMENTAL triton-metal environment: darwin, triton AND
-    triton_metal importable, torch present, and no CUDA/ROCm device visible.
+    """The EXPERIMENTAL triton-msl environment: darwin, triton AND
+    triton_msl importable, torch present, and no CUDA/ROCm device visible.
     Execution pattern is CPU torch tensors (zero-copy UMA — not mps)."""
     if sys.platform != "darwin":
         return False
     try:
         import triton  # noqa: F401
-        import triton_metal  # noqa: F401
+        import triton_msl  # noqa: F401
         import torch
         return not torch.cuda.is_available()
     except Exception:
@@ -109,9 +109,9 @@ def resolve_backend(backend="auto"):
     """Resolve a backend request to a concrete backend name.
 
     ``"auto"`` -> triton if importable AND a GPU (CUDA or ROCm) is visible,
-    else metal if the triton-metal environment is detected (experimental),
+    else metal if the triton-msl environment is detected (experimental),
     else torch if importable, else numpy. A ``"triton"`` request in the
-    triton-metal environment resolves to ``"metal"`` (the same kernels, CPU
+    triton-msl environment resolves to ``"metal"`` (the same kernels, CPU
     tensors). Explicitly requesting an unavailable backend raises
     RuntimeError with the reason.
     """
@@ -137,12 +137,12 @@ def resolve_backend(backend="auto"):
             "triton backend requested but triton + a CUDA/ROCm GPU are not "
             "available (triton importable: requires the [gpu] extra; GPU "
             "visible: torch.cuda.is_available() must be True). On Apple "
-            "silicon, the experimental metal backend requires triton-metal "
+            "silicon, the experimental metal backend requires triton-msl "
             "— see README 'Experimental: Apple silicon (Metal)'.")
     if backend == "metal" and not _metal_available():
         raise RuntimeError(
-            "metal backend requested but the triton-metal environment is not "
-            "available (requires darwin + triton + triton-metal installed and "
+            "metal backend requested but the triton-msl environment is not "
+            "available (requires darwin + triton + triton-msl installed and "
             "no CUDA/ROCm device) — see README 'Experimental: Apple silicon "
             "(Metal)' for the install recipe.")
     return backend
@@ -156,7 +156,7 @@ def _warn_metal_once():
     if not _warned_metal:
         _warned_metal = True
         warnings.warn(
-            "tridec metal backend is EXPERIMENTAL (triton-metal, fp32, CPU "
+            "tridec metal backend is EXPERIMENTAL (triton-msl, fp32, CPU "
             "torch tensors); validated at spike level only — see "
             "bench/receipts/metal_spike.md", UserWarning, stacklevel=3)
 
@@ -167,7 +167,7 @@ def _default_device(backend, device):
     if backend == "triton":
         return "cuda"
     if backend == "metal":
-        # triton-metal documented pattern: CPU tensors (zero-copy UMA), NOT mps.
+        # triton-msl documented pattern: CPU tensors (zero-copy UMA), NOT mps.
         return "cpu"
     if backend == "torch":
         try:
@@ -217,7 +217,7 @@ class BpDecoder:
             from .backends.bp_torch import BpGpu
             self._impl = BpGpu(H, priors, max_iter=max_iter,
                                ms_scaling_factor=ms_scaling_factor)
-        else:  # triton kernels: "triton" (CUDA/ROCm) or "metal" (triton-metal)
+        else:  # triton kernels: "triton" (CUDA/ROCm) or "metal" (triton-msl)
             if self.backend == "metal":
                 _warn_metal_once()
             from .backends.bp_triton import BpTriton

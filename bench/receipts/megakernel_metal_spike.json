@@ -1,6 +1,6 @@
 {
  "meta": {
-  "STATUS": "PRELIMINARY / EXPERIMENTAL -- megakernel spike on the triton-metal environment (fp32, CPU tensors, block=32; see tridec/backends/megakernel.py docstring for the triton-metal codegen constraints). H200/MI300X receipts + autotune deferred to the cloud session (issue #2).",
+  "STATUS": "PRELIMINARY / EXPERIMENTAL -- megakernel spike on the triton-msl environment (fp32, CPU tensors, block=32; see tridec/backends/megakernel.py docstring for the triton-msl codegen constraints). H200/MI300X receipts + autotune deferred to the cloud session (issue #2).",
   "date": "2026-06-10",
   "platform": {
    "system": "darwin",

@@ -1,7 +1,7 @@
 """Megakernel (single-launch persistent BP / Relay-BP) gates on CUDA/ROCm.
 
 The cloud half of issue #2 (the Metal half is test_megakernel_metal.py).
-Unlike triton-metal, CUDA/ROCm honors ``tl.debug_barrier()`` (verified on
+Unlike triton-msl, CUDA/ROCm honors ``tl.debug_barrier()`` (verified on
 H200: bar.sync present in the emitted PTX at every source barrier site, plus
 a behavioral load->barrier->store ring repro exact at BLOCK=128/256 whose
 no-barrier negative control races to <1% match — see
