@@ -225,6 +225,13 @@ flips) — documented in `bench/receipts/full_grid_noregression.json`.
 
 ## Status
 
+`0.2.2` — **CUDA-graph fast path**, default-on for small-batch min-sum BP
+(`cuda_graph="auto"`; ~1.9× at batch-1 on H200, gated to `S≤256` to dodge a
+large-batch cuBLAS-in-graph cliff); **surface d≥15 BP ceiling lifted** (1-D grid
+flatten — d=15/d=17 now decode on CUDA + ROCm, was capped at d=14); and the
+experimental Metal backend tracks upstream's **`triton_metal` → `triton_msl`**
+rename. GPU min-sum-BP features; Relay-BP / accuracy paths byte-unchanged.
+
 `0.2.1` — **Relay-BP auto-dispatch**: `from_dem(..., algorithm="relay")` /
 `RelayBpDecoder` use the megakernel by default on GPU (`megakernel=False` opts
 back to the two-kernel host loop); GPU-gated by construction. Validated on all

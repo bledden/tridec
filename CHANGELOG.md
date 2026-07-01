@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.2 — 2026-07-01
+
+*Two GPU min-sum-BP features validated cross-vendor on H200 (CUDA) + MI300X
+(ROCm7), plus the experimental-Metal rename. The Relay-BP / accuracy paths and
+their receipts are byte-unchanged from 0.2.1.*
 
 **Surface d>=15 BP-kernel ceiling lifted via 1-D grid flatten (#6).** The
 two-kernel min-sum BP path (`_check_update_kernel` / `_bit_update_kernel`)
@@ -31,6 +35,11 @@ all S would have been a 100x H200 regression. Bit-identical to eager, validated
 cross-vendor (incl. ROCm/hipGraph). Receipts: `bench/receipts/cuda_graph_d5.md`,
 `bench/receipts/followup_d15_graph.md`. Closes #4. (min-sum BP only — relay's
 per-shot early-exit is not capturable.)
+
+**`triton_metal` → `triton_msl` rename.** The experimental Apple-silicon Metal
+backend tracks upstream's package rebrand (`triton-metal` → `triton-msl`);
+import sites, docs, and the `metal` extra updated. No change to the CUDA/ROCm
+(triton) or CPU paths.
 
 ## 0.2.1 — 2026-06-14
 
